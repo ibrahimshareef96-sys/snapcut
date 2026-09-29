@@ -1,0 +1,39 @@
+{
+  "_about": "The snap reel's project settings (a worked example; the footage is not in the repo). Effect files (room.plate, studio.clip, explosion plates, table_mask) are relative to the work folder; source, work, out and images to the project folder.",
+  "title": "Snap reel",
+  "source": "take/IMG_9696.MOV",
+  "work": "work",
+  "out": "deliverables",
+  "cover_t": 6.85,
+  "vocab": "Claude Code, Codex, Kimi Code, Higgsfield, Thanos, snapcut",
+  "matte": {"start": 10.9, "end": 68.0},
+  "room": {
+    "background": "plate",
+    "empty_frame_t": 1.0,
+    "plate": "hf/room_plate.png",
+    "table_mask": "qa/table_mask.png",
+    "rim_left": [0.20, 0.85, 1.00],
+    "rim_right": [1.00, 0.22, 0.78]
+  },
+  "studio": {
+    "clip": "hf/studio.mp4", "drive_t0": 24.9, "in_event": "clap", "out_event": "snap", "fps": 24,
+    "track": {"hsv_lo": [8, 110, 80], "hsv_hi": [32, 255, 255], "region": [0, 0, 700, 1250], "min_area": 600}
+  },
+  "explosion": {
+    "plates": [
+      {"file": "hf/explosion_beams.mp4", "start": 0.8, "dur": 3.4, "lead": 0.55, "scale": 1.25, "alpha": 1.0},
+      {"file": "hf/explosion_streaks.mp4", "start": 0.0, "dur": 3.2, "lead": 0.30, "scale": 1.45, "alpha": 0.9}
+    ]
+  },
+  "icons": {
+    "claude": {"brand": "claude"},
+    "kimi": {"brand": "kimi"},
+    "terminal": {"lucide": "terminal", "fill": "#D7FD64"},
+    "sparkles": {"lucide": "sparkles", "fill": "#D7FD64"},
+    "clapperboard": {"lucide": "clapperboard", "fill": "#FFFDF4"},
+    "send": {"lucide": "send", "fill": "#FFFDF4"},
+    "check": {"lucide": "check", "fill": "#D7FD64"},
+    "file-text": {"lucide": "file-text", "fill": "#FFFDF4"}
+  },
+  "images": {}
+}

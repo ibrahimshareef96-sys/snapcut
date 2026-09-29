@@ -1,0 +1,8 @@
+# snapcut's Python packages. Tested with Python 3.11 and the versions in brackets.
+numpy>=1.26                     # (2.2.6)
+scipy>=1.11                     # (1.17.1)
+opencv-python-headless>=4.8     # (5.0.0) SIFT alignment, inpainting, colour
+pillow>=10.0                    # (12.3.0)
+faster-whisper>=1.0             # (1.2.1) downloads its Whisper model on first run
+pyloudnorm>=0.1.1               # (0.2.0)
+playwright>=1.45                # (1.58.0) then: python3 -m playwright install chromium

@@ -1,0 +1,21 @@
+# build output and caches
+__pycache__/
+*.pyc
+template/tools/visiontool
+.DS_Store
+._*
+
+# anything a project produces, in case one is started inside the repo by mistake
+work/
+data/
+deliverables/
+/project.json
+/plan.json
+*.mp4
+*.mov
+*.MOV
+*.mkv
+*.wav
+*.mp3
+*.webp
+fonts/cache/
