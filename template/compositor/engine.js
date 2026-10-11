@@ -1,20 +1,40 @@
-/* snapcut compositor engine: constants, math, springs, drawing and rich-text helpers, asset loading.
-   Every visual is a pure function of output time t (seconds), so any frame renders the same on its own. */
+/* snapcut compositor engine: constants, math, springs, drawing and text helpers, asset loading.
+   Every visual is a pure function of output time t (seconds), so any frame renders the same on its own.
+   The look is the Shareefico "Ranked" brand (approved 11 Oct 2026): graphite and bone, one tier colour per video,
+   Satoshi for words, Unbounded for level labels and the handle, IBM Plex Mono for mono labels. */
 'use strict';
 
 const E = (() => {
   const W = 1080, H = 1920, FPS = 30;
   const SRC = 1440 / 1080;                  // fg frames and the plate are 1440x2560; layout space is 1080x1920
   const SAFE = { x0: 65, x1: 1015, y0: 269, y1: 1248 };
+  /* The palette. `accent` is the video's tier colour (plan.json brand.tier, set once by setTier at init): the spoken
+     caption word, the opener's label, keyword highlights. ground/surface/surface2/line are the graphite tokens,
+     bone the main text, muted/faint secondary text, ink the graphite used for text on a tier fill. magenta, cyan,
+     purple, red, gold and igBlue are effect colours for beat code (a REC dot, a like heart), never the house look. */
+  let ACCENT = '#34D07F';
   const C = {
-    ink: '#050D0A', chalk: '#FFFDF4', lime: '#D7FD64', magenta: '#FF3DCB', cyan: '#39E6FF', purple: '#9B5CFF',
-    red: '#FF4D4D', gold: '#FFC857', igBlue: '#0095F6', card: 'rgba(10,14,20,0.82)', edge: 'rgba(255,253,244,0.14)',
+    ground: '#15151C', surface: '#24242F', surface2: '#34323D', line: '#3A3A47',
+    bone: '#F4F1EA', muted: '#A6A4B0', faint: '#8D8A97', ink: '#15151C',
+    get accent() { return ACCENT; },
+    magenta: '#FF3DCB', cyan: '#39E6FF', purple: '#9B5CFF', red: '#FF4D4D', gold: '#F5A524', igBlue: '#0095F6',
+    card: '#24242F', edge: 'rgba(244,241,234,0.14)',
+    // Names kept for beat files written before 11 Oct 2026 (the snap reel example): `lime` now gives the tier
+    // colour and `chalk` bone, so old beats render in the house look.
+    get lime() { return ACCENT; },
+    chalk: '#F4F1EA',
   };
   const STONES = [                          // the six Infinity Stones, in the order the words light them
     { name: 'SPACE', col: '#3D8BFF' }, { name: 'MIND', col: '#FFD23F' }, { name: 'REALITY', col: '#FF2E4D' },
     { name: 'POWER', col: '#A54DFF' }, { name: 'TIME', col: '#2BE36B' }, { name: 'SOUL', col: '#FF8A1F' },
   ];
-  const FONT = { head: "'Clash Display'", serif: "'Instrument Serif'", mono: "'Plex Mono'", body: "'Satoshi'" };
+  const FONT = { head: "'Satoshi'", body: "'Satoshi'", label: "'Unbounded'", mono: "'IBM Plex Mono'" };
+
+  /* The video's tier from the brand bundle (compositor/shareefico.js): sets C.accent. */
+  function setTier(id) {
+    ACCENT = window.Shareefico.tier(id).colour;
+    return ACCENT;
+  }
 
   // ---------- math ----------
   const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -34,6 +54,13 @@ const E = (() => {
     if (z >= 1) return 1 - Math.exp(-w * u) * (1 + w * u);
     const wd = w * Math.sqrt(1 - z * z);
     return 1 - Math.exp(-z * w * u) * (Math.cos(wd * u) + (z * w / wd) * Math.sin(wd * u));
+  }
+  /* The brand springs (stiffness, damping at mass 1), as step responses of time: press 600/50, ui 400/30 (about 3%
+     overshoot: panels, type, figures), badge 260/18 (about 12%: badges only), progress 120/20. */
+  const SPRINGS = Object.freeze({ press: [600, 50], ui: [400, 30], badge: [260, 18], progress: [120, 20] });
+  function brandSpring(u, name = 'ui') {
+    const [k, c] = SPRINGS[name];
+    return spring(u, Math.sqrt(k), c / (2 * Math.sqrt(k)));
   }
   /* On screen from t0 to t1: springs in, eases out. a = opacity, s = spring scale factor. */
   function life(t, t0, t1, o = {}) {
@@ -64,6 +91,8 @@ const E = (() => {
     fn();
     ctx.restore();
   }
+  /* The caption shadow token, 0 2px 12px rgba(0,0,0,.55): under captions and type on footage. */
+  const captionShadow = (ctx, fn) => withShadow(ctx, 12, 0.55, 2, fn);
   function hexToRgb(hex) {
     let h = String(hex).trim();
     if (/^#[0-9a-f]{3}$/i.test(h)) h = '#' + [...h.slice(1)].map(c => c + c).join('');
@@ -72,7 +101,8 @@ const E = (() => {
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   }
   const rgba = (hex, a) => { const [r, g, b] = hexToRgb(hex); return `rgba(${r},${g},${b},${clamp(a)})`; };
-  /* Soft radial light of colour hex (#RRGGBB), peak opacity a, radius r. */
+  /* Soft radial light of colour hex (#RRGGBB), peak opacity a, radius r. For effects in beat code; the house look
+     has no glows (a soft dark pool behind type is the one gradient it uses). */
   function glow(ctx, x, y, r, hex, a, mid = 0.35) {
     if (a <= 0 || r <= 0) return;
     const g = ctx.createRadialGradient(x, y, 0, x, y, r);
@@ -83,62 +113,25 @@ const E = (() => {
     ctx.fillRect(x - r, y - r, r * 2, r * 2);
   }
 
-  // ---------- rich text: Clash caps, *serif accent*, ~LIME KEYWORD~ ----------
-  function parseRich(s) {
-    const out = [], re = /(\*[^*]+\*|~[^~]+~)/g;
-    let last = 0, m;
-    while ((m = re.exec(s))) {
-      if (m.index > last) out.push({ text: s.slice(last, m.index), kind: 'head' });
-      out.push({ text: m[0].slice(1, -1), kind: m[0][0] === '*' ? 'accent' : 'kw' });
-      last = m.index + m[0].length;
-    }
-    if (last < s.length) out.push({ text: s.slice(last), kind: 'head' });
-    return out;
-  }
-  const headFont = (px, wt = 600) => `${wt} ${px}px ${FONT.head}`;
-  const serifFont = px => `italic 400 ${px}px ${FONT.serif}`;
-  const monoFont = (px, wt = 500) => `${wt} ${px}px ${FONT.mono}`;
-  const bodyFont = (px, wt = 600) => `${wt} ${px}px ${FONT.body}`;
-  const tokFont = (tk, px, acc) => (tk.kind === 'accent' ? serifFont(px * acc) : headFont(px, tk.kind === 'kw' ? 700 : 600));
-  const tokText = tk => (tk.kind === 'accent' ? tk.text : tk.text.toUpperCase());
-  const tracked = tk => tk.kind !== 'accent';
-  function richWidth(ctx, tokens, px, acc = 1.14, tracking = 0) {
-    let w = 0;
-    for (const tk of tokens) {
-      ctx.font = tokFont(tk, px, acc);
-      ctx.letterSpacing = tracked(tk) ? `${tracking}px` : '0px';
-      w += ctx.measureText(tokText(tk)).width;
-    }
-    ctx.letterSpacing = '0px';
-    return w;
-  }
-  /* Left edge x, alphabetic baseline y. style: {fill, accent, kw, stroke} overrides for the caption showcase. */
-  function drawRich(ctx, tokens, x, y, px, o = {}) {
-    let cx = x;
-    for (const tk of tokens) {
-      ctx.font = tokFont(tk, px, o.acc || 1.14);
-      ctx.letterSpacing = tracked(tk) ? `${o.tracking || 0}px` : '0px';
-      const txt = tokText(tk);
-      const fill = tk.kind === 'accent' ? (o.accent || C.lime) : tk.kind === 'kw' ? (o.kw || C.lime) : (o.fill || C.chalk);
-      if (o.stroke) {
-        ctx.lineWidth = o.stroke; ctx.strokeStyle = fill; ctx.lineJoin = 'round';
-        ctx.strokeText(txt, cx, y);
-      } else {
-        ctx.fillStyle = fill;
-        ctx.fillText(txt, cx, y);
-      }
-      cx += ctx.measureText(txt).width;
-    }
-    ctx.letterSpacing = '0px';
-    return cx - x;
-  }
+  // ---------- type ----------
+  /* Satoshi carries three weights on a canvas: Black 900 (heads, captions), ExtraBold 800 (small heads, buttons),
+     Medium 500 (body). Any other weight asked for snaps to the nearest of them, so old beat code stays on brand. */
+  const satoshi = wt => (wt >= 850 ? 900 : wt >= 650 ? 800 : 500);
+  const headFont = (px, wt = 900) => `${satoshi(wt)} ${px}px ${FONT.head}`;
+  const bodyFont = (px, wt = 500) => `${satoshi(wt)} ${px}px ${FONT.body}`;
+  /* Unbounded 700/800: level labels in capitals (+0.08em tracking) and the @handle (lower case). */
+  const labelFont = (px, wt = 700) => `${wt >= 750 ? 800 : 700} ${px}px ${FONT.label}`;
+  /* IBM Plex Mono 500/600: prompts, code, mono labels in capitals. */
+  const monoFont = (px, wt = 500) => `${wt >= 550 ? 600 : 500} ${px}px ${FONT.mono}`;
+  /* Kept for beat files written before 11 Oct 2026: the serif accent face is retired; it draws Satoshi Medium. */
+  const serifFont = px => bodyFont(px, 500);
   function text(ctx, str, x, y, o = {}) {
     ctx.save();
     ctx.font = o.font || headFont(40);
     ctx.letterSpacing = `${o.ls || 0}px`;
     ctx.textAlign = o.align || 'left';
     ctx.textBaseline = o.base || 'alphabetic';
-    ctx.fillStyle = o.color || C.chalk;
+    ctx.fillStyle = o.color || C.bone;
     if (o.alpha != null) ctx.globalAlpha *= o.alpha;
     if (o.shadow) { ctx.shadowColor = o.shadow[0]; ctx.shadowBlur = o.shadow[1]; ctx.shadowOffsetY = o.shadow[2] || 0; }
     ctx.fillText(str, x, y);
@@ -150,9 +143,21 @@ const E = (() => {
     ctx.restore();
     return w;
   }
+  /* The largest size (from px down to min) at which str fits maxW; f(px) builds the font. */
+  function fitSize(ctx, str, f, px, maxW, min = 12, ls = 0) {
+    let s = px;
+    while (s > min && textWidth(ctx, str, f(s), ls * s) > maxW) s -= 1;
+    return s;
+  }
 
   // ---------- assets ----------
   const cache = new Map();
+  /* Satoshi arrives as base64 from render.py (the Fontshare file in the user's cache). Unbounded and IBM Plex Mono
+     come from the Google Fonts stylesheet in index.html, the only network request the renderer allows; they are
+     loaded here before the first frame, and a missing face stops the render instead of drawing a fallback. */
+  const WEB_FACES = [['700 40px Unbounded', 'Unbounded 700'], ['800 40px Unbounded', 'Unbounded 800'],
+    ["500 30px 'IBM Plex Mono'", 'IBM Plex Mono 500'], ["600 30px 'IBM Plex Mono'", 'IBM Plex Mono 600']];
+  const SAMPLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 @ · . , ! ? \' " - :';
   async function loadFonts(list) {
     for (const f of list) {
       const bytes = Uint8Array.from(atob(f.b64), ch => ch.charCodeAt(0));
@@ -160,10 +165,23 @@ const E = (() => {
       await face.load();
       document.fonts.add(face);
     }
+    const missing = [];
+    for (const [spec, name] of WEB_FACES) {
+      const faces = await document.fonts.load(spec, SAMPLE).catch(() => []);
+      if (!faces.length) missing.push(name);
+    }
     await document.fonts.ready;
-    const probe = [[headFont(40), 'Clash'], [serifFont(40), 'Instrument'], [monoFont(20), 'Plex'], [bodyFont(20), 'Satoshi']];
-    const bad = probe.filter(([f]) => !document.fonts.check(f));
-    if (bad.length) throw new Error('fonts not usable: ' + bad.map(b => b[1]).join(', '));
+    const satoshiOk = [...document.fonts].some(f => f.family.replace(/['"]/g, '') === 'Satoshi' && f.status === 'loaded');
+    if (!satoshiOk) missing.push('Satoshi');
+    if (missing.length) {
+      throw new Error('fonts not usable: ' + missing.join(', ') + ' (Satoshi: tools/fetch_fonts.sh; Unbounded and '
+        + 'IBM Plex Mono load from Google Fonts, so the render needs an internet connection)');
+    }
+  }
+  /* Load the glyphs a string needs before any frame draws it (a web font downloads each script subset on first use;
+     a frame must never be drawn while one is still on its way). */
+  async function loadGlyphs(spec, str) {
+    if (str) await document.fonts.load(spec, str);
   }
   function image(url) {
     let p = cache.get(url);
@@ -171,7 +189,7 @@ const E = (() => {
       p = new Promise((res, rej) => {
         const im = new Image();
         im.onload = () => im.decode().then(() => res(im), () => res(im));
-        im.onerror = () => rej(new Error('image failed to load: ' + url));
+        im.onerror = () => rej(new Error('image failed to load: ' + url.slice(0, 120)));
         im.src = url;
       });
       cache.set(url, p);
@@ -179,13 +197,15 @@ const E = (() => {
     }
     return p;
   }
+  /* An SVG string (a brand mark from compositor/shareefico.js) as an image, drawn only as an <img>. */
+  const svgImage = svg => image('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg));
   const icons = Object.create(null);         // no prototype: an icon named "constructor" is just a missing icon
   /* tools/icons.py has already refused anything that is not a plain SVG. The real boundary is below: the icon is
      only ever drawn as an <img> from a data: URL, where scripts and external loads never run. */
   async function loadIcon(name, svg, fill) {
     if (/<\s*(\w+:)?(script|foreignObject)\b|javascript:|\son[a-z]+\s*=/i.test(svg)) throw new Error(`icon ${name} is not a plain SVG`);
     if (fill && !/^#[0-9a-f]{6}$/i.test(fill)) throw new Error(`icon ${name}: fill must be #RRGGBB`);
-    const doc = new DOMParser().parseFromString(svg.replace(/currentColor/g, fill || '#FFFDF4'), 'image/svg+xml');
+    const doc = new DOMParser().parseFromString(svg.replace(/currentColor/g, fill || C.bone), 'image/svg+xml');
     const root = doc.documentElement;
     if (root.nodeName !== 'svg') throw new Error(`icon ${name} is not an SVG`);
     if (!root.getAttribute('viewBox')) {                 // keep the artwork filling the box when it is resized
@@ -210,8 +230,8 @@ const E = (() => {
   }
 
   return {
-    W, H, FPS, SRC, SAFE, C, STONES, FONT, clamp, lerp, prog, ease, spring, life, hash, noise1, rr, fillRR,
-    withShadow, glow, hexToRgb, rgba, parseRich, headFont, serifFont, monoFont, bodyFont, richWidth, drawRich,
-    text, textWidth, loadFonts, image, loadIcon, drawIcon, icons,
+    W, H, FPS, SRC, SAFE, C, STONES, FONT, setTier, clamp, lerp, prog, ease, spring, SPRINGS, brandSpring, life,
+    hash, noise1, rr, fillRR, withShadow, captionShadow, glow, hexToRgb, rgba, headFont, bodyFont, labelFont,
+    monoFont, serifFont, text, textWidth, fitSize, loadFonts, loadGlyphs, image, svgImage, loadIcon, drawIcon, icons,
   };
 })();

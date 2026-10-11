@@ -161,24 +161,20 @@ const S = (() => {
   }
 
   // ---------- takeovers ----------
+  /* The takeover background: the blurred room under a graphite scrim and a fine bone dot grid (no coloured glows:
+     the house look keeps colour for the tier accent). */
   function drawGlass(ctx, t) {
     ctx.drawImage(img.blur, 0, 0, W, H);
-    ctx.fillStyle = 'rgba(4,6,12,0.58)';
+    ctx.fillStyle = 'rgba(21,21,28,0.72)';
     ctx.fillRect(0, 0, W, H);
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    E.glow(ctx, 120 + 40 * Math.sin(t * 0.6), 420, 620, C.lime, 0.10);
-    E.glow(ctx, 980, 700 + 60 * Math.sin(t * 0.5), 700, C.magenta, 0.14);
-    E.glow(ctx, 540, 1500, 800, C.purple, 0.10);
-    ctx.restore();
     // fine dot grid
     ctx.save();
-    ctx.fillStyle = 'rgba(255,253,244,0.05)';
+    ctx.fillStyle = 'rgba(244,241,234,0.05)';
     for (let y = 300; y < 1250; y += 36) for (let x = 72; x < 1010; x += 36) ctx.fillRect(x, y, 2, 2);
     ctx.restore();
   }
   /* Morph between the full room frame (p = 0) and the face bubble at (px, py, pr) (p = 1). */
-  function drawBubble(ctx, n, t, fg, p, px, py, pr, ring = C.lime) {
+  function drawBubble(ctx, n, t, fg, p, px, py, pr, ring = C.accent) {
     const cam = TL.camera, i = clamp(n, 0, cam.cx.length - 1);
     const zFull = zoomAt(t);
     const zPip = (pr * 2) / (cam.fh[i] * 1.7);
@@ -198,7 +194,6 @@ const S = (() => {
       ctx.save();
       ctx.globalAlpha = (e - 0.6) / 0.4;
       ctx.lineWidth = 5; ctx.strokeStyle = ring;
-      ctx.shadowColor = E.rgba(ring, 0.6); ctx.shadowBlur = 24;
       ctx.beginPath(); ctx.arc(cx, cy, R + 2.5, 0, Math.PI * 2); ctx.stroke();
       ctx.restore();
     }

@@ -39,7 +39,7 @@ def test_oversized_svg_is_refused():
 
 
 @pytest.mark.parametrize("spec", [
-    {"lucide": "terminal", "fill": "#D7FD64"},
+    {"lucide": "terminal", "fill": "#34D07F"},
     {"brand": "claude"},
     {"file": "assets/logo.svg", "fill": None},
 ])
@@ -54,7 +54,7 @@ def test_valid_specs(spec):
     {"lucide": "terminal\n"},                        # trailing newline
     {"lucide": "Terminal"},                          # upper case is not a Lucide name
     {"lucide": "terminal", "fill": "red"},           # not #RRGGBB
-    {"lucide": "terminal", "fill": "#D7FD64\n"},
+    {"lucide": "terminal", "fill": "#34D07F\n"},
     {"brand": "claude", "fill": "#FFFFFF"},          # brand marks are never recoloured
     "terminal",                                      # not an object
 ])

@@ -28,12 +28,12 @@
   "icons": {
     "claude": {"brand": "claude"},
     "kimi": {"brand": "kimi"},
-    "terminal": {"lucide": "terminal", "fill": "#D7FD64"},
-    "sparkles": {"lucide": "sparkles", "fill": "#D7FD64"},
-    "clapperboard": {"lucide": "clapperboard", "fill": "#FFFDF4"},
-    "send": {"lucide": "send", "fill": "#FFFDF4"},
-    "check": {"lucide": "check", "fill": "#D7FD64"},
-    "file-text": {"lucide": "file-text", "fill": "#FFFDF4"}
+    "terminal": {"lucide": "terminal", "fill": "#34D07F"},
+    "sparkles": {"lucide": "sparkles", "fill": "#34D07F"},
+    "clapperboard": {"lucide": "clapperboard", "fill": "#F4F1EA"},
+    "send": {"lucide": "send", "fill": "#F4F1EA"},
+    "check": {"lucide": "check", "fill": "#34D07F"},
+    "file-text": {"lucide": "file-text", "fill": "#F4F1EA"}
   },
   "images": {}
 }

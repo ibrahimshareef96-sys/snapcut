@@ -1,19 +1,26 @@
 # Third-party notices
 
-snapcut's own code and text are MIT licensed (see `LICENSE`). Nothing below is included in this repository or
-relicensed under MIT. Each item is downloaded by the person who runs snapcut, on their machine, under its own terms.
+snapcut's own code and text are MIT licensed (see `LICENSE`). Nothing below is relicensed under MIT. Everything
+except the Shareefico marks is not included in this repository: it is downloaded by the person who runs snapcut, on
+their machine, under its own terms.
 
-## Fonts (downloaded by `template/tools/fetch_fonts.sh`)
+## Shareefico marks (in this repository, not MIT)
 
-- **Clash Display**, Copyright Indian Type Foundry, and **Satoshi**, designed by Deni Anggara, published by Indian
-  Type Foundry. ITF Free Font License (FFL) v2.0, downloaded directly from Fontshare (https://www.fontshare.com) by
-  each user, who must accept the licence first: https://www.fontshare.com/licenses/itf-ffl. snapcut never
-  redistributes, modifies, subsets or converts these fonts.
-- **Instrument Serif**, Copyright 2022 The Instrument Serif Project Authors
-  (https://github.com/Instrument/instrument-serif). SIL Open Font License 1.1.
-- **IBM Plex Mono**, Copyright (c) 2017 IBM Corp., with Reserved Font Name "Plex". SIL Open Font License 1.1.
-  Both OFL fonts are fetched from https://github.com/google/fonts at commit
-  23e54b51ddffbc7713c583748e3bd86f62b1fa4a, checksum-verified, with their `OFL.txt` saved beside them.
+- `template/compositor/shareefico.js` holds the Shareefico symbol, the five level badges, the pixel mascot sprite and
+  the Barakah Blueprint Waveform, as the brand's own code draws them. Copyright Ibrahim Shareef, all rights reserved.
+  They are included so his videos render in the house look; they are not licensed for other use (see
+  `template/compositor/NOTICE-shareefico.txt`, which travels into every project). For your own videos, turn the
+  opener and the end beat off: plan.json `"brand": {"opener": false, "end_beat": false}`.
+
+## Fonts
+
+- **Satoshi**, designed by Deni Anggara, published by Indian Type Foundry. ITF Free Font License (FFL) v2.0,
+  downloaded directly from Fontshare (https://www.fontshare.com) by `template/tools/fetch_fonts.sh` for each user,
+  who must accept the licence first: https://www.fontshare.com/licenses/itf-ffl. snapcut never redistributes,
+  modifies, subsets or converts it.
+- **Unbounded**, Copyright 2022 The Unbounded Project Authors (https://github.com/googlefonts/unbounded), and
+  **IBM Plex Mono**, Copyright (c) 2017 IBM Corp., with Reserved Font Name "Plex". SIL Open Font License 1.1. Both
+  are loaded by the compositor page from Google Fonts (https://fonts.google.com) while it renders; no file is saved.
 
 ## Icons (downloaded by `template/tools/icons.py fetch`)
 

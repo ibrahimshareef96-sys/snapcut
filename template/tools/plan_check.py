@@ -5,6 +5,7 @@ transcript is build_timeline.py's job.
 """
 from __future__ import annotations
 
+import brand
 from sfx_kit import KINDS
 
 SIZES = ("s", "m", "l", "xl")
@@ -72,4 +73,4 @@ def _look(plan: dict) -> list[str]:
 
 
 def problems(plan: dict) -> list[str]:
-    return _beats(plan) + _phrases(plan) + _look(plan)
+    return _beats(plan) + _phrases(plan) + _look(plan) + brand.problems(plan)

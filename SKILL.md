@@ -1,6 +1,6 @@
 ---
 name: snapcut
-description: Edit a raw vertical talking-head take (a phone selfie video, 9:16) into a finished Instagram Reel, TikTok or YouTube Short. Cuts the pauses, adds word-synced kinetic captions and motion graphics that land on the spoken word, relights the person against their own room with RGB streamer light, synthesises sound effects, masters the audio to -14 LUFS and can add AI shots (a Higgsfield studio cutaway, explosion plates). Use when someone asks to edit a reel or a short from a clip, add animated captions or motion graphics to a talking-head video, cut the silences out of a vertical video, or make a video like the snap reel. Renders locally on macOS with Python, ffmpeg and headless Chromium.
+description: Edit a raw vertical talking-head take (a phone selfie video, 9:16) into a finished Instagram Reel, TikTok or YouTube Short. Cuts the pauses, adds word-synced captions (the spoken word lit in the video's level colour) and motion graphics that land on the spoken word, opens on a level tag and closes on a 2-second end beat with the handle and the pixel mascot, relights the person against their own room with RGB streamer light, synthesises sound effects, masters the audio to -14 LUFS and can add AI shots (a Higgsfield studio cutaway, explosion plates). Use when someone asks to edit a reel or a short from a clip, add animated captions or motion graphics to a talking-head video, cut the silences out of a vertical video, or make a video like the snap reel. Renders locally on macOS with Python, ffmpeg and headless Chromium.
 license: MIT
 ---
 
@@ -10,6 +10,10 @@ snapcut turns one vertical take into a finished short. The person stays exactly 
 real voice); everything else is built around the words they say: the cut, the captions, the graphics, the light, the
 sound. Every step is a small tool in the project folder, and every creative choice lives in two JSON files the agent
 writes for the take, so an edit can be changed and re-rendered in minutes.
+
+It ships in the Shareefico house look ("Ranked", 11 Oct 2026): graphite and bone, one level colour per video, Satoshi
+captions, a level tag opener and an end beat with the @shareefico handle and the pixel mascot. Those marks are his:
+for anyone else's videos, turn the opener and the end beat off (see "The house look").
 
 The worked example in `examples/snap-reel/` is the reel this skill was built from (a 73 s take cut to 55 s, with a
 DM bubble, tool tiles, full-screen takeovers, an AI studio shot and a snap explosion). Read its beat files before
@@ -34,8 +38,9 @@ writing your own; they show every technique in use.
 
 ## Before the first edit
 
-Run the checks in `references/01-setup.md` once per machine: Python packages, ffmpeg, a headless Chromium, the fonts
-(ask before accepting the Fontshare licence) and, on macOS, the Xcode command line tools for the Vision matte.
+Run the checks in `references/01-setup.md` once per machine: Python packages, ffmpeg, a headless Chromium, Satoshi
+(ask before accepting the Fontshare licence) and, on macOS, the Xcode command line tools for the Vision matte. The
+render needs an internet connection: the page loads Unbounded and IBM Plex Mono from Google Fonts.
 
 ## The pipeline
 
@@ -45,13 +50,13 @@ Paths below are relative to the project folder unless they start with `<skill>` 
 |---|---|---|
 | 1. Project | `python3 <skill>/scripts/new_project.py <dir> --source <take> [--work <dir>] [--out <dir>] [--title <t>]` | tools, compositor, `project.json`, a `plan.json` stub |
 | 2. Words | `python3 tools/transcribe.py` | the transcript with times and pauses, sharp transients (claps, snaps) |
-| 3. Plan | you write `plan.json` (references/02-plan-the-edit.md) | trim, cuts, caption phrases, beats, the look |
+| 3. Plan | you write `plan.json` (references/02-plan-the-edit.md) | trim, cuts, caption phrases, beats, the level, the look |
 | 4. Vision | `python3 tools/vision.py` | person matte + face track (Apple Vision, on this Mac) |
 | 5. Timeline | `python3 tools/build_timeline.py` | `data/timeline.json`; fails loudly on any plan/transcript mismatch |
 | 6. Base | `python3 tools/build_base.py frames` (plate mode: `reference` and `plate` first) | the person cut out and relit, per frame |
 | 7. Assets | `python3 tools/prep_assets.py` then `python3 tools/icons.py fetch` | room layers, AI clips as frames, icons |
 | 8. Beats | you write `compositor/beats.js` (references/04-beats-catalog.md) | the graphics, each on its word |
-| 9. QA | `python3 tools/render.py stills N ...`, `facecheck`, `safecheck` | proof, before the long render |
+| 9. QA | `python3 tools/render.py stills N ...`, `facecheck`, `safecheck`, `glyphs` | proof, before the long render |
 | 10. Sound | `python3 tools/render.py sfx` then `python3 tools/build_audio.py` | cues, voice chain, -14 LUFS mixes |
 | 11. Render | `python3 tools/render.py video` | the picture, frame by frame |
 | 12. Deliver | `python3 tools/deliver.py` | master, voice-only version, cover, contact sheet |
@@ -73,8 +78,9 @@ room settings change.
    the second.
 4. **Write `beats.js`** for this take. Start from `examples/snap-reel/compositor/` and `compositor/kit.js`; keep one
    idea per beat, springing in on its word and gone before the next idea arrives.
-5. **Check before rendering.** Render stills on every beat (`render.py stills`), look at them, then run
-   `render.py facecheck` and `render.py safecheck`. Both must pass. Iterate here; it is the cheap loop.
+5. **Check before rendering.** Render stills on every beat, on the opener (frames 3 and 15) and through the end beat
+   (its first frame, +12 and the last), look at them, then run `render.py facecheck`, `render.py safecheck` and
+   `render.py glyphs`. All three must pass. Iterate here; it is the cheap loop.
 6. **Render, deliver, report**: the deliverable paths, the loudness line from `build_audio.py`, the checks that
    passed, and anything you were unsure about (a word you fixed, a cut that clips a breath).
 
@@ -90,9 +96,36 @@ room settings change.
 
 ## Captions
 
-Stacked capitals with one serif-italic accent per phrase, rising in on their first word, bottom-anchored by default.
-Close selfies filmed with the face low in frame need `"captions": {"position": "top"}`; `facecheck` tells you.
-Markup and sizing rules: references/03-captions.md.
+Satoshi Black capitals, at most 15 characters a row (longer plan lines are wrapped for you), bone with the word being
+said lit in the video's level colour, a light shadow, letters tight but never touching. Rows rise in on their first
+spoken word, bottom-anchored by default. Close selfies filmed with the face low in frame need
+`"captions": {"position": "top"}`; `facecheck` tells you (it also wants the mouth 40 px clear of the block).
+Sizing rules: references/03-captions.md.
+
+## The house look
+
+plan.json `"brand"` sets the level the video teaches and the package around it (references/02-plan-the-edit.md):
+
+```json
+"brand": {"tier": "uncommon", "opener": {"topic": "AI Maxxing 101"},
+          "end_beat": {"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"}}
+```
+
+- **Level:** `tier` (common, uncommon, rare, epic, legendary) or `level` 1 to 5, default uncommon (LVL 2). Its
+  colour lights the spoken caption word and the opener. Pick the level the video teaches: tool tips and prompts are
+  uncommon (LVL 2), building your own tools rare (LVL 3), client builds epic (LVL 4).
+- **Level tag opener**, the first 2 s, top left: the badge, "UNCOMMON · LVL 2" and the topic. Keep that corner free
+  of beats for those 2 s. `"opener": false` turns it off.
+- **End beat**, the last 2 s: the picture dims, the symbol and the handle (or a keyword call to action such as
+  `Comment "SKILL"`) rise, and the pixel mascot pops up with one bubble (24 characters at most). The last word must
+  end 0.1 s before it starts; the timeline names the trim end that makes room. `"end_beat": false` turns it off.
+- The symbol, badges and pixel mascot come from `compositor/shareefico.js` (Ibrahim Shareef's marks, not MIT; see
+  `compositor/NOTICE-shareefico.txt`). They are for his videos only: for anyone else, set
+  `"brand": {"opener": false, "end_beat": false}`. Unknown keys in `"brand"` are refused, so a typo never falls
+  back to his handle.
+- **Projects started before 11 Oct 2026** need the new compositor and tools: copy `template/compositor/` and
+  `template/tools/` over the project's own (keep its `beats.js`), then rebuild the timeline. An old
+  `data/timeline.json` stops the render with that instruction.
 
 ## Where to look
 
@@ -100,10 +133,10 @@ Markup and sizing rules: references/03-captions.md.
 |---|---|
 | Install, fonts, Chromium, disk | references/01-setup.md |
 | project.json and plan.json, every key | references/02-plan-the-edit.md |
-| Caption markup, sizes, style, palette | references/03-captions.md |
+| Caption sizes, style, palette, the house look | references/03-captions.md |
 | Beat modules, the kit, sound cues | references/04-beats-catalog.md |
 | AI room plate, studio shot, explosion plates | references/05-higgsfield.md |
-| Stills, facecheck, safecheck, loudness | references/06-qa.md |
+| Stills, facecheck, safecheck, glyphs, loudness | references/06-qa.md |
 | Handheld, HDR, odd frame rates, non-Mac | references/07-pitfalls.md |
 
 ## Timing, measured

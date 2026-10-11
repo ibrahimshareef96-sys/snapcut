@@ -1,0 +1,8 @@
+shareefico.js in this folder holds the Shareefico symbol, the five level badges, the pixel mascot sprite and the
+Barakah Blueprint Waveform, exactly as the brand's own code draws them.
+
+Copyright (c) 2026 Ibrahim Shareef. All rights reserved. Not covered by the MIT licence of snapcut.
+
+They are here so Ibrahim Shareef's own videos render in his house look: the level tag opener (its badge holds his
+symbol) and the end beat (his symbol and his pixel mascot), both drawn by brand.js. They are not licensed for any
+other use. For your own videos, turn both off in plan.json: "brand": {"opener": false, "end_beat": false}.

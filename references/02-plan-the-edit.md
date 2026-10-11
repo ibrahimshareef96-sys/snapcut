@@ -19,9 +19,11 @@ clock, as `transcribe.py` prints it); the tools convert them to output time afte
   "beats": {"studio": {"word": "studio"}, "like_this": {"word": "like", "after": 22.5}},
   "phrases": [
     {"dm": "Ibrahim, how do you get AI to edit videos like this?", "header": "NEW MESSAGE", "sub": "the most asked question"},
-    {"lines": [["TODAY I'M GOING", "m"], ["TO *answer*", "l"]]}
+    {"lines": [["TODAY I'M GOING", "m"], ["TO ANSWER", "l"]]}
   ],
   "captions": {"position": "bottom"},
+  "brand": {"tier": "uncommon", "opener": {"topic": "AI Maxxing 101"},
+            "end_beat": {"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"}},
   "camera": {"base_zoom": 1.15, "face_y": 650, "punch": 1.12, "hits": {"like_this": 1.14}},
   "look": {
     "shakes": [{"beat": "snap", "amp": 26, "dur": 1.3}],
@@ -48,7 +50,10 @@ clock, as `transcribe.py` prints it); the tools convert them to output time afte
 | `beats` | no | Named word moments for graphics and sound: `{"key": {"word": "studio", "after": 22.5}}` is the first "studio" spoken at or after 22.5 s. Beat keys are what `beats.js` reads as `B.key` (output seconds). A beat word that is not found stops the build. |
 | `phrases` | yes | The captions, in spoken order. **Every spoken word in the trim must be in exactly one phrase, in order**; the build names the first word that breaks this. See 03-captions.md for the markup and sizes. |
 | `phrases[].dm` | no | One phrase may be `{"dm": "..."}`: the words are typed into a chat bubble as they are spoken instead of shown as captions. `header` and `sub` are the bubble's two small lines; `sub` must be true (no invented names or numbers). |
-| `captions.position` | no | `"bottom"` (default) or `"top"`. `render.py facecheck` tells you which the take needs. |
+| `captions.position` | no | `"bottom"` (default) or `"top"`. `render.py facecheck` tells you which the take needs. At the top, a phrase that starts in the first 2 s sits under the level tag opener. |
+| `brand.tier` / `brand.level` | no | The level the video teaches: `common`, `uncommon`, `rare`, `epic`, `legendary`, or `1` to `5` (give one; they must agree if you give both). Default uncommon (LVL 2). Its colour lights the spoken caption word and the opener. |
+| `brand.opener` | no | The level tag for the first 2 s, top left: `{"topic": "..."}` (at most 40 characters, sentence case; empty shows the level alone) or `false`. On by default. |
+| `brand.end_beat` | no | The last 2 s: `{"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"}` or `false`. `cta` (at most 24 characters) is a handle (starts with @, set in Unbounded) or a keyword call to action (`Comment "SKILL"`, set in Satoshi capitals); `bubble` is the pixel mascot's line, at most 24 characters, in capitals. On by default; the last word must end 0.1 s before the end beat starts, and the build names the trim end that makes room. |
 | `camera.base_zoom` | no | 1.0 to about 1.2. Above 1 the camera can reframe and follow the face; 1.0 shows the full frame and cannot move. |
 | `camera.face_y` | no | Where the face centre sits on screen (layout pixels, 0 to 1920). Only reachable when zoom leaves room to move. |
 | `camera.punch` | no | The zoom the cuts alternate to (about 1.06 to 1.12). |
@@ -58,7 +63,7 @@ clock, as `transcribe.py` prints it); the tools convert them to output time afte
 | `look.stutter` | no | The room lights flicker from one beat to another (tension before a big moment). |
 | `look.push` | no | A slow push-in from one beat to another, `amount` about 0.1, released on the second beat. |
 | `look.hue_kick` | no | A beat after which the room lights swing in hue and settle. |
-| `look.caption_flips` | no | The caption flips through four styles for `dur` seconds from a beat (on the word "captions", say). |
+| `look.caption_flips` | no | The caption flips through three other styles (all in the tier colour, bone outline, tier outline) for `dur` seconds from a beat (on the word "captions", say). |
 | `look.sfx` | no | Sound cues that need no graphic: `{"beat", "kind", "gain", "offset", "align"}`. Kinds in 04-beats-catalog.md. |
 
 ### Writing the plan from the transcript
@@ -66,11 +71,15 @@ clock, as `transcribe.py` prints it); the tools convert them to output time afte
 1. `transcribe.py` prints each run of words with its start time and the pause after it, then the sharp transients.
 2. Pick the trim. Pick the cuts from the pauses (over about 0.35 s between thoughts). Short takes need few cuts;
    do not turn the person into a jump-cut machine.
-3. Split the words into caption phrases of one breath each, two lines at most, 3 to 15 characters per line. Mark
-   one accent per phrase (the word that carries the meaning).
-4. Name a beat for every word a graphic or a sound lands on. Use `after` when the word repeats.
-5. Build the timeline. It first lists every shape problem in plan.json at once, then prints the segment count, the
-   output duration and any mismatch, naming the word and the second. Fix and rebuild until it passes.
+3. Split the words into caption phrases of one breath each, two lines at most, 3 to 15 characters per line (a longer
+   line is wrapped into rows of 15 for you, and the build notes a phrase that ends up with more than three rows).
+   No accent markup is needed: the word being said lights up by itself.
+4. Pick the level the video teaches (`brand.tier`) and the opener's topic, and leave about 2.1 s of picture after the
+   last word for the end beat (or turn it off).
+5. Name a beat for every word a graphic or a sound lands on. Use `after` when the word repeats.
+6. Build the timeline. It first lists every shape problem in plan.json at once, then prints the segment count, the
+   output duration, the brand line (level, opener, end beat) and any mismatch, naming the word and the second. Fix
+   and rebuild until it passes.
    `build_timeline.py --no-cuts` builds the same plan without the cuts, to hear the take uncut.
 
 Words in any language and script match (accents, Arabic, and so on); punctuation is ignored.
@@ -94,5 +103,5 @@ Words in any language and script match (accents, Arabic, and so on); punctuation
 | `studio` | Optional AI cutaway: `{"clip", "drive_t0", "in_event", "out_event", "fps", "track"}`. It plays from the `in_event` beat to the `out_event` beat; `drive_t0` is the source second the clip's motion was driven from (05-higgsfield.md). `"enabled": false` turns it off. |
 | `studio.track` | Optional coloured prop to follow in the studio clip (a glove, a mug): `{"hsv_lo": [h,s,v], "hsv_hi": [h,s,v], "region": [x0,y0,x1,y1], "min_area": 600}` in OpenCV HSV (hue 0 to 180) and 1080x1920 pixels. Beat code reads it with `S.propAt(t)`. |
 | `explosion.plates` | Optional VFX clips on black, screen-blended over the frame on the beat named `snap`: `{"file", "start", "dur", "lead", "fps", "scale", "alpha"}`. `lead` is how far into the clip the burst peaks. |
-| `icons` | Each name maps to `{"lucide": "terminal", "fill": "#D7FD64"}`, `{"brand": "claude"}` or `{"file": "path.svg", "fill": null}`. Run `tools/icons.py fetch` after changing it. |
+| `icons` | Each name maps to `{"lucide": "terminal", "fill": "#34D07F"}`, `{"brand": "claude"}` or `{"file": "path.svg", "fill": null}`. Run `tools/icons.py fetch` after changing it. House fills: bone `#F4F1EA`, or the video's tier colour (common `#A3ACB9`, uncommon `#34D07F`, rare `#3B82F6`, epic `#A26BFA`, legendary `#F5A524`). |
 | `images` | `{"name": "path.png"}` extra images the beat code gets as `img.name`. |

@@ -9,11 +9,15 @@ Usage:
   python3 render.py sfx                   the sound cue list -> data/sfx_events.json (build_audio.py reads it)
   python3 render.py safecheck [STEP]      graphics and text only, every STEP-th frame (default 1); fails if any ink
                                           leaves the Instagram safe zone
-  python3 render.py facecheck [STEP]      fails if captions or front graphics cover the face (eyes to mouth) on any
-                                          checked frame (every STEP-th, default 3); names the fix
+  python3 render.py facecheck [STEP]      fails if captions or front graphics cover the face (brow to upper lip; for
+                                          captions also 40 px under the mouth) on any checked frame (every STEP-th,
+                                          default 3); names the fix
+  python3 render.py glyphs                checks the letter gaps of every caption word at the size it is shown and
+                                          fails if a pair could not be opened to the minimum ink gap
 
 Browser: Playwright's Chromium (`python3 -m playwright install chromium`), or set SNAPCUT_CHROME to another
-Chromium-based binary.
+Chromium-based binary. The page loads Unbounded and IBM Plex Mono from Google Fonts (tools/brand.py FONT_CSS): the
+only network request it is allowed to make, so rendering needs an internet connection.
 """
 from __future__ import annotations
 
@@ -33,22 +37,18 @@ from PIL import Image
 from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import sync_playwright
 
+import brand
 import config
 import icons
 
 SAFE = (65, 269, 1015, 1248)   # Instagram reel safe zone in the 1080x1920 frame (x0, y0, x1, y1)
 INK_ALPHA = 24                 # alpha above which a pixel counts as ink (soft glows fade below it)
 FONTS = [  # (family the compositor asks for, weight, style, file in the font cache; see tools/fetch_fonts.sh)
-    ("Clash Display", "200 700", "normal", "clash-display/ClashDisplay-Variable.ttf"),
-    ("Instrument Serif", "400", "italic", "instrument-serif/InstrumentSerif-Italic.ttf"),
-    ("Instrument Serif", "400", "normal", "instrument-serif/InstrumentSerif-Regular.ttf"),
-    ("Plex Mono", "400", "normal", "ibm-plex-mono/IBMPlexMono-Regular.ttf"),
-    ("Plex Mono", "500", "normal", "ibm-plex-mono/IBMPlexMono-Medium.ttf"),
     ("Satoshi", "300 900", "normal", "satoshi/Satoshi-Variable.ttf"),
-]
+]   # Unbounded and IBM Plex Mono come from Google Fonts through compositor/index.html (brand.FONT_CSS)
 ARGS = ["--force-color-profile=srgb", "--font-render-hinting=none", "--disable-lcd-text", "--hide-scrollbars"]
-NETWORK = re.compile(r"^(https?|wss?|ftp):", re.I)   # the page never needs the network; beat code must not reach it
-ENCODE = ["-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p", "-c:v", "libx264", "-preset", "slow",
+NETWORK = re.compile(r"^(https?|wss?|ftp):", re.I)   # beat code must not reach the network: only the brand fonts load
+ENCODE =["-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p", "-c:v", "libx264", "-preset", "slow",
           "-crf", "15", "-profile:v", "high", "-level", "4.2", "-color_primaries", "bt709", "-color_trc", "bt709",
           "-colorspace", "bt709", "-movflags", "+faststart"]
 
@@ -64,7 +64,7 @@ def load_fonts() -> list[dict]:
     missing = [f for *_, f in FONTS if not (root / f).is_file()]
     if missing:
         sys.exit(f"fonts missing in {root}: {missing}; run tools/fetch_fonts.sh (it asks you to accept the "
-                 "Fontshare licence for Clash Display and Satoshi)")
+                 "Fontshare licence for Satoshi)")
     return [{"family": fam, "weight": w, "style": s, "b64": base64.b64encode((root / f).read_bytes()).decode()}
             for fam, w, s, f in FONTS]
 
@@ -119,7 +119,7 @@ def compositor(transparent: bool = False) -> Iterator[tuple]:
             errors: list[str] = []
             page.on("pageerror", lambda e: errors.append(str(e)))
             page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
-            page.route(NETWORK, lambda route: route.abort())
+            page.route(NETWORK, brand.gate)   # refuses everything but the brand fonts, redirects included
             page.goto((config.ROOT / "compositor/index.html").as_uri())
             if transparent:
                 page.evaluate("() => { document.documentElement.style.background = 'transparent'; "
@@ -273,9 +273,28 @@ def facecheck(step: int) -> None:
         other = "top" if pos == "bottom" else "bottom"
         fix = (f"captions: try plan.json \"captions\": {{\"position\": \"{other}\"}}, or reframe with camera.base_zoom"
                " / face_y. " if bad else "")
+        opener = (json.loads((config.data() / "timeline.json").read_text()).get("brand") or {}).get("opener")
+        if opener and any(a / fps < opener["t1"] for a, _ in long_spans):
+            fix += ("The level tag opener (top left, first 2 s) may be the one on the face: frame the face lower with "
+                    "plan.json camera.face_y. ")
         sys.exit(f"{fix}Graphics: move them in compositor/beats.js (look at `render.py stills` of those frames), "
                  "then run this again")
     print(f"face clear of captions and front graphics (every {step} frames)")
+
+
+def glyphs() -> None:
+    """Every caption word, laid out at the size it is shown: the tightest letter pairs, and a failure if any two
+    letters stay closer than the compositor's minimum ink gap (it opens such pairs up to 12 px; this catches a
+    pair it could not open). Words drawn whole (joined scripts) are not measured."""
+    with compositor() as (page, _, errors):
+        report = page.evaluate("() => M.glyphReport()")
+        if errors:
+            raise RuntimeError(" | ".join(errors))
+    for r in report["worst"]:
+        print(f"{r['word']:>16} {r['size']:6.1f} px  {r['pair']!r:6}  gap {r['min']:5.2f} px  opened {r['opened']:4.1f} px")
+    if report["below"]:
+        sys.exit(f"{report['below']} letter pairs closer than {report['minGap']} px (the tightest are above)")
+    print(f"{report['pairs']} letter pairs, none closer than {report['minGap']} px")
 
 
 def main() -> None:
@@ -303,6 +322,8 @@ def run(mode: str, nums: list[int]) -> None:
         safecheck(nums[0] if nums else 1)
     elif mode == "facecheck" and len(nums) <= 1:
         facecheck(nums[0] if nums else 3)
+    elif mode == "glyphs" and not nums:
+        glyphs()
     else:
         sys.exit(__doc__)
 

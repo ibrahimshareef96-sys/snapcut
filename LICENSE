@@ -23,3 +23,8 @@ SOFTWARE.
 This licence covers the code and text written for this project only. Fonts, icons,
 brand marks and AI-generated media are not included and keep their own terms; see
 THIRD_PARTY_NOTICES.md.
+
+Exception: template/compositor/shareefico.js (the Shareefico symbol, level badges,
+pixel mascot and the Barakah Blueprint Waveform) is included but is not covered by
+this licence. Copyright (c) 2026 Ibrahim Shareef, all rights reserved; see
+template/compositor/NOTICE-shareefico.txt.

@@ -13,18 +13,18 @@ const KIT = (() => {
     ctx.save();
     ctx.globalAlpha *= a;
     ctx.translate(x, y); ctx.scale(s, s); ctx.rotate(o.rot || 0);
-    E.withShadow(ctx, 30, 0.5, 10, () => E.fillRR(ctx, -size / 2, -size / 2, size, size, size * 0.24, o.bg || '#12151D'));
-    E.fillRR(ctx, -size / 2, -size / 2, size, size, size * 0.24, null, o.edge || 'rgba(255,253,244,0.16)', 2);
+    E.withShadow(ctx, 30, 0.35, 10, () => E.fillRR(ctx, -size / 2, -size / 2, size, size, size * 0.24, o.bg || C.surface));
+    E.fillRR(ctx, -size / 2, -size / 2, size, size, size * 0.24, null, o.edge || C.line, 2);
     if (typeof icon === 'string' && E.icons[icon]) E.drawIcon(ctx, icon, 0, 0, size * (o.iconK || 0.56));
     else if (icon && typeof icon === 'object') {
       const k = size * 0.62 / Math.max(icon.width, icon.height);
       ctx.drawImage(icon, -icon.width * k / 2, -icon.height * k / 2, icon.width * k, icon.height * k);
     } else {                                   // no logo (a brand with no public mark, a missing image): its initial
       const mono = ([...String(o.mono || label || icon || '').trim()][0] || '').toUpperCase();
-      if (mono) E.text(ctx, mono, 0, size * 0.17, { font: E.headFont(Math.round(size * 0.5)), align: 'center', color: C.chalk });
+      if (mono) E.text(ctx, mono, 0, size * 0.17, { font: E.headFont(Math.round(size * 0.5)), align: 'center', color: C.bone });
     }
-    if (o.dim) E.fillRR(ctx, -size / 2, -size / 2, size, size, size * 0.24, `rgba(10,10,14,${0.62 * o.dim})`);
-    if (label) E.text(ctx, label, 0, size / 2 + 40, { font: E.monoFont(24, 500), align: 'center', ls: 2, color: C.chalk, shadow: ['rgba(0,0,0,0.7)', 12, 2] });
+    if (o.dim) E.fillRR(ctx, -size / 2, -size / 2, size, size, size * 0.24, `rgba(21,21,28,${0.62 * o.dim})`);
+    if (label) E.text(ctx, label, 0, size / 2 + 40, { font: E.monoFont(24, 500), align: 'center', ls: 3, color: C.bone, shadow: ['rgba(0,0,0,0.55)', 12, 2] });
     ctx.restore();
   }
 
@@ -43,9 +43,11 @@ const KIT = (() => {
     ctx.restore();
   }
 
-  /* A big word, meant for the 'behind' layer (the person occludes it). Grows from 82% and tightens its tracking,
-     so it is never wider than its final width. Size it so the final width is under 880 px. Note: when the head is
-     large on screen it covers the middle of the word; prefer it when the word is wider than the head. */
+  /* A big word in Satoshi Black, meant for the 'behind' layer (the person occludes it). Grows from 82% while its
+     letters close in from a little apart (they never overlap on the way), never wider than its final width. Solid
+     tier colour (o.col overrides) with the caption shadow; o.stroke draws the outline version. No glow, no gradient.
+     Size it so the final width is under 880 px. When the head is large on screen it covers the middle of the word;
+     prefer it when the word is wider than the head. */
   function hero(ctx, str, x, y, px, t0, t1, t, o = {}) {
     const L = life(t, t0, t1, { w: 11, z: 0.62, out: 0.3 });
     if (!L.on || L.a <= 0) return;
@@ -53,30 +55,29 @@ const KIT = (() => {
     ctx.globalAlpha *= L.a * (o.alpha ?? 1);
     const s = lerp(0.82, 1, Math.min(L.s, 1.04));
     ctx.translate(x, y); ctx.scale(s, s);
-    ctx.font = E.headFont(px, 700);
+    ctx.font = E.headFont(px, 900);
     ctx.textAlign = 'center';
-    ctx.letterSpacing = `${-(1 - clamp(L.s)) * 8}px`;
-    if (o.stroke) {
-      ctx.lineWidth = o.stroke; ctx.strokeStyle = o.col || C.lime; ctx.lineJoin = 'round';
-      ctx.shadowColor = E.rgba(o.col || C.lime, 0.7); ctx.shadowBlur = 30;
-      ctx.strokeText(str, 0, 0);
-    } else {
-      const g = ctx.createLinearGradient(0, -px * 0.8, 0, px * 0.1);
-      g.addColorStop(0, o.top || '#FFFFFF'); g.addColorStop(1, o.col || C.lime);
-      ctx.fillStyle = g;
-      ctx.shadowColor = E.rgba(o.col || C.lime, 0.5); ctx.shadowBlur = 32;
-      ctx.fillText(str, 0, 0);
-    }
+    ctx.letterSpacing = `${(1 - clamp(L.s)) * 8}px`;
+    const col = o.col || C.accent;
+    E.captionShadow(ctx, () => {
+      if (o.stroke) {
+        ctx.lineWidth = o.stroke; ctx.strokeStyle = col; ctx.lineJoin = 'round';
+        ctx.strokeText(str, 0, 0);
+      } else {
+        ctx.fillStyle = col;
+        ctx.fillText(str, 0, 0);
+      }
+    });
     ctx.restore();
   }
 
-  /* A mono label that types on after a short rule (top-left labels, card titles). */
-  function monoLabel(ctx, str, x, y, t0, t, a = 1, col = C.chalk) {
+  /* A mono label in IBM Plex Mono capitals that types on after a short rule (top-left labels, card titles). */
+  function monoLabel(ctx, str, x, y, t0, t, a = 1, col = C.bone) {
     const k = prog(t, t0, 0.55);
     if (k <= 0 || a <= 0) return;
     ctx.save();
     ctx.globalAlpha *= a;
-    E.withShadow(ctx, 14, 0.65, 2, () => {
+    E.captionShadow(ctx, () => {
       ctx.strokeStyle = col; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(x, y - 9); ctx.lineTo(x + 30 * Math.min(1, k * 3), y - 9); ctx.stroke();
       ctx.font = E.monoFont(26); ctx.letterSpacing = '3px'; ctx.fillStyle = col;
@@ -108,7 +109,7 @@ const KIT = (() => {
     const x0 = SAFE.x0 + 30 + inset, x1 = SAFE.x1 - 30 - inset, y0 = SAFE.y0 + 30 + inset, y1 = SAFE.y1 - 30 - inset, k = 70;
     ctx.save();
     ctx.globalAlpha *= L.a;
-    ctx.strokeStyle = C.chalk; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.strokeStyle = C.bone; ctx.lineWidth = 6; ctx.lineCap = 'round';
     ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 10;
     [[x0, y0, 1, 1], [x1, y0, -1, 1], [x0, y1, 1, -1], [x1, y1, -1, -1]].forEach(([x, y, sx, sy]) => {
       ctx.beginPath(); ctx.moveTo(x, y + sy * k); ctx.lineTo(x, y); ctx.lineTo(x + sx * k, y); ctx.stroke();

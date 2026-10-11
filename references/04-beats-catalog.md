@@ -40,6 +40,14 @@ SNAPCUT.cues.push(B => [{ t: B.studio, kind: 'whoosh', gain: 0.6 }]);
   size `s` needs its centre at least `s/2 + 45` px inside.
 - **Keep it off the face.** `S.faceScreen(n, t)` returns `{x, y, h}` of the face on screen for frame `n`; place
   graphics beside it. Big words go in the `behind` layer, where the person occludes them.
+- **Leave the brand package its room.** The level tag opener holds the top-left corner for the first 2 s and the end
+  beat owns the last 2 s (`BRAND.endStart()`); end your graphics before it.
+- **Web fonts load per script.** Unbounded and IBM Plex Mono come from Google Fonts, which sends each script's
+  letters on first use. If beat code draws them with characters outside plain Latin, load those first in its
+  `init`: `E.loadGlyphs(E.monoFont(26), 'the text')` (await it), or the first frame draws a fallback face.
+- **The house look.** Graphite surfaces, bone type, the tier colour (`C.accent`) for the one thing that matters.
+  No glows, no neon, no gradients, no frosted glass; type on footage gets `E.captionShadow`. Springs: `E.brandSpring(u,
+  'ui')` for panels, type and figures, `'badge'` only for badges.
 
 ## The kit (`compositor/kit.js`)
 
@@ -48,8 +56,8 @@ SNAPCUT.cues.push(B => [{ t: B.studio, kind: 'whoosh', gain: 0.6 }]);
 | `KIT.tile(ctx, x, y, size, icon, label, a, s, o)` | an app tile: rounded square, an icon name from project.json icons (or an image), a mono label under it. An icon that was never loaded shows the label's initial. `o.dim` greys it, `o.bg` recolours it |
 | `KIT.tiles(ctx, t, items, end, size)` | a row of tiles popping in on their own words: `items = [{icon, label, x, y, t0}]` |
 | `KIT.badge(ctx, x, y, r, colour, 'check' or 'x', a, s)` | a round check or cross badge |
-| `KIT.hero(ctx, str, x, y, px, t0, t1, t, o)` | a huge word that grows in, for the `behind` layer; `o.stroke` for an outline version |
-| `KIT.monoLabel(ctx, str, x, y, t0, t, a, colour)` | a small label that types on after a short rule |
+| `KIT.hero(ctx, str, x, y, px, t0, t1, t, o)` | a huge Satoshi Black word in the tier colour that grows in, for the `behind` layer; `o.col` recolours it, `o.stroke` for an outline version |
+| `KIT.monoLabel(ctx, str, x, y, t0, t, a, colour)` | a small IBM Plex Mono label that types on after a short rule |
 | `KIT.sparkles(ctx, t, t0, t1, cx, cy, spots, radius)` | sparkle icons popping around a point (needs a `sparkles` icon) |
 | `KIT.viewfinder(ctx, t, t0, t1)` | camera corners and a blinking REC inside the safe zone |
 
@@ -58,11 +66,12 @@ SNAPCUT.cues.push(B => [{ t: B.studio, kind: 'whoosh', gain: 0.6 }]);
 | Helper | Use |
 |---|---|
 | `E.life(t, t0, t1, {w, z, out})` | entrance spring (`w` stiffness, `z` damping) and exit fade |
+| `E.brandSpring(u, 'ui')` | the brand springs as step responses: `press`, `ui` (about 3% overshoot), `badge` (about 12%), `progress` |
 | `E.spring(u, w, z)`, `E.prog(t, t0, dur)`, `E.ease.outCubic` / `inCubic` / `inOutCubic` / `outExpo` / `outBack` | timing curves |
-| `E.text(ctx, str, x, y, {font, align, color, ls, alpha, shadow})` | text; fonts from `E.headFont(px, weight)`, `E.serifFont(px)`, `E.monoFont(px, weight)`, `E.bodyFont(px, weight)` |
+| `E.text(ctx, str, x, y, {font, align, color, ls, alpha, shadow})` | text; fonts from `E.headFont(px, weight)` (Satoshi 900/800), `E.bodyFont(px, weight)` (Satoshi 500 by default), `E.labelFont(px)` (Unbounded, for level labels in capitals with +0.08em tracking), `E.monoFont(px, weight)` (IBM Plex Mono 500/600). Other Satoshi weights snap to 900, 800 or 500 |
 | `E.drawIcon(ctx, name, cx, cy, size, alpha)` | a project.json icon |
-| `E.fillRR(ctx, x, y, w, h, r, fill, stroke)`, `E.withShadow(ctx, blur, alpha, dy, fn)`, `E.glow(ctx, x, y, r, hex, a)` | cards, shadows, soft light |
-| `E.C` | the palette: `chalk` cream, `lime` accent, `magenta`, `cyan`, `purple`, `red`, `gold`, `card` |
+| `E.fillRR(ctx, x, y, w, h, r, fill, stroke)`, `E.withShadow(ctx, blur, alpha, dy, fn)`, `E.captionShadow(ctx, fn)` | cards and shadows |
+| `E.C` | the palette: `ground` `#15151C`, `surface` `#24242F`, `surface2` `#34323D`, `line` `#3A3A47`, `bone` `#F4F1EA`, `muted` `#A6A4B0`, `faint` `#8D8A97`, `ink` (graphite, for text on a tier fill), `accent` (the video's tier colour). Effect colours for beat code only: `magenta`, `cyan`, `purple`, `red`, `gold`, `igBlue`. Old names still work for older beat files: `lime` is now the tier colour, `chalk` bone |
 | `E.hash(x)`, `E.noise1(x, seed)` | deterministic jitter |
 
 ## Scene helpers (`S`, `compositor/scene.js`)
@@ -83,7 +92,8 @@ SNAPCUT.cues.push(B => [{ t: B.studio, kind: 'whoosh', gain: 0.6 }]);
 
 Every sound is synthesised in `tools/sfx_kit.py`; there are no sample files. A cue is `{t, kind, gain, align}`, from
 `SNAPCUT.cues` in a beat file or `look.sfx` in plan.json. `align: 'end'` makes the sound finish on `t` (a riser
-landing on a clap).
+landing on a clap). The brand package adds its own three: a swish as the opener slides in, a whoosh as the end
+beat's symbol rises and a pop when the mascot's bubble opens.
 
 | Kinds | For |
 |---|---|
@@ -98,7 +108,8 @@ it for a moment, so keep the big ones (`boom`, `snapboom`) for moments without s
 
 ## The worked example
 
-`examples/snap-reel/compositor/`:
+`examples/snap-reel/compositor/` (29 Sep 2026, before the house look: its beats keep that reel's own glows and RGB
+colours, and its `C.lime` now draws in the tier colour; borrow its techniques, not its colours):
 
 - `beats_room.js`: the DM bubble hook, a viewfinder on "like this?", caption and motion-graphics showcases, tool
   tiles crossed out on "don't", a coding-agent tile row, the end chip.

@@ -42,18 +42,22 @@ export SNAPCUT_CHROME="/path/to/chrome-headless-shell"
 
 ## Fonts
 
-Captions use four families: Clash Display and Satoshi (Indian Type Foundry, ITF Free Font License, from Fontshare),
-Instrument Serif and IBM Plex Mono (SIL Open Font License, from the Google Fonts repository). None of them ship in
-this repository. `tools/fetch_fonts.sh` downloads them into the per-user cache:
+Three families, none of them in this repository:
 
-```bash
-bash tools/fetch_fonts.sh                          # the OFL fonts, checksum-verified; stops at the Fontshare step
-bash tools/fetch_fonts.sh --accept-fontshare-ffl   # only after the user has read and accepted the FFL
-```
+- **Satoshi** (captions, words on cards; Indian Type Foundry, ITF Free Font License, from Fontshare).
+  `tools/fetch_fonts.sh` downloads it into the per-user cache:
 
-The ITF licence says that downloading the fonts means accepting it
-(https://www.fontshare.com/licenses/itf-ffl). **Ask the user before passing the accept flag.** Never commit the font
-files, subset them or convert their format; the licence forbids all three.
+  ```bash
+  bash tools/fetch_fonts.sh                          # stops at the licence and explains it
+  bash tools/fetch_fonts.sh --accept-fontshare-ffl   # only after the user has read and accepted the FFL
+  ```
+
+  The ITF licence says that downloading the font means accepting it
+  (https://www.fontshare.com/licenses/itf-ffl). **Ask the user before passing the accept flag.** Never commit the
+  font files, subset them or convert their format; the licence forbids all three.
+- **Unbounded** (level labels, the handle) and **IBM Plex Mono** (mono labels, the mascot's bubble), SIL Open Font
+  License. The compositor page loads them from Google Fonts each time it renders, so **the render needs an internet
+  connection**; without it the render stops at the start and says which face is missing. Nothing is saved to disk.
 
 ## Where things are kept
 
@@ -62,7 +66,7 @@ files, subset them or convert their format; the licence forbids all three.
 | One video's code and small JSON | the project folder from `new_project.py` | its first argument |
 | Heavy media (matte, frames, renders) | project.json `work` (default `<project>/work`) | `--work` or edit project.json |
 | Deliverables | project.json `out` (default `<project>/deliverables`) | `--out` or edit project.json |
-| Fonts and fetched icons | `~/.cache/snapcut` | `SNAPCUT_CACHE` (fonts alone: `SNAPCUT_FONT_DIR`) |
+| Satoshi and fetched icons | `~/.cache/snapcut` | `SNAPCUT_CACHE` (fonts alone: `SNAPCUT_FONT_DIR`, holding `satoshi/Satoshi-Variable.ttf`) |
 
 Put `work` on an external drive when the internal one is tight; the tools check the drive is mounted before they
 write anything.

@@ -3,9 +3,13 @@
      renderFrame(n, o)      draw output frame n on #out (sub-frames averaged into motion blur where things move fast)
                             o.ink 'all': graphics and text only on a transparent canvas (the safe-zone check);
                             o.ink 'front': the same without the behind-the-person layer (the face check)
-     sfxEvents()            the sound cue list: plan.look.sfx plus each beat module's cues
+     sfxEvents()            the sound cue list: plan.look.sfx, the brand package's cues and each beat module's cues
      captionFaceReport()    per phrase, how much of its time the caption block covers the face (render.py facecheck)
-     faceBox(n)             the face's eyes-to-mouth box on screen at frame n, null while the face is not shown whole
+     glyphReport()          the tightest letter pairs of every caption word (render.py glyphs)
+     faceBox(n)             the face's brow-to-upper-lip box on screen at frame n (and its mouth line), null while the
+                            face is not shown whole
+
+   The brand package (compositor/brand.js: the level tag opener and the end beat) is drawn over everything else, last.
 
    Per-video beat files register themselves on SNAPCUT (see compositor/beats.js and references/04-beats-catalog.md):
      SNAPCUT.room.push({init, draw(ctx, t, layer, img)})         layer = 'behind' (under the person) | 'front'
@@ -39,11 +43,13 @@ const M = (() => {
     if ((P.plates || []).length && !('snap' in B)) {
       throw new Error('project.json explosion plates play on the beat named "snap": add a "snap" event or beat to plan.json');
     }
+    E.setTier((TL.brand && TL.brand.tier) || 'uncommon');   // C.accent: a timeline built before 11 Oct has no brand
     await E.loadFonts(data.fonts);
     for (const [name, ic] of Object.entries(data.icons)) await E.loadIcon(name, ic.svg, ic.fill);
     for (const [name, url] of Object.entries(P.images || {})) img[name] = await E.image(url);
     await S.init(TL, P, data.track);
     FX.init(P); CAP.init(TL);
+    await BRAND.init(TL);
     for (const mod of [...SNAPCUT.room, SNAPCUT.studio, SNAPCUT.takeover]) if (mod && mod.init) mod.init(TL);
     out = document.getElementById('out');
     octx = out.getContext('2d');
@@ -53,8 +59,10 @@ const M = (() => {
     return { frames: TL.frames, duration: TL.duration };
   }
 
-  /* Motion blur (sub-frames over a 180-degree shutter) near every beat, where things move fast. */
+  /* Motion blur (sub-frames over a 180-degree shutter) near every beat, where things move fast. Never in the end
+     beat: the pixel mascot must step like a sprite. */
   function fast(t) {
+    if (BRAND.inEndBeat(t)) return false;
     if (Object.values(B).some(x => t >= x - 0.1 && t <= x + 0.6)) return true;
     const tk = SNAPCUT.takeover;
     return !!tk && tk.WIN().some(w => (t >= w.t0 && t <= w.t0 + 0.45) || (t >= w.t1 && t <= w.t1 + 0.45));
@@ -97,7 +105,11 @@ const M = (() => {
     if (!inkOnly && st) { reset(ctx); st.burst(ctx, t, imgs); }
     reset(ctx);
     CAP.draw(ctx, t, inkOnly);
-    if (inkOnly) return;
+    if (inkOnly) {
+      reset(ctx);
+      BRAND.draw(ctx, t, ink);
+      return;
+    }
     if (st) {
       reset(ctx);
       st.flash(ctx, t);
@@ -106,6 +118,8 @@ const M = (() => {
     }
     reset(ctx);
     FX.vignette(ctx, 0.32);
+    reset(ctx);
+    BRAND.draw(ctx, t, false);
   }
 
   async function renderFrame(n, o = {}) {
@@ -140,7 +154,7 @@ const M = (() => {
   }
 
   function sfxEvents() {
-    const ev = [...((TL.look && TL.look.sfx) || [])];
+    const ev = [...((TL.look && TL.look.sfx) || []), ...BRAND.cues()];
     for (const fn of SNAPCUT.cues) ev.push(...fn(B, TL));
     // align 'end': the sound ENDS on t (a riser landing on a clap); build_audio.py places it
     return ev.filter(e => Number.isFinite(e.t) && e.t >= 0 && e.t <= TL.duration)
@@ -149,16 +163,18 @@ const M = (() => {
   }
 
   const captionFaceReport = () => CAP.faceReport(bctx);
+  const glyphReport = () => CAP.glyphReport(bctx);
 
   /* The brow-to-upper-lip box of the face on screen at output frame n (eyes and nose: what a viewer reads a face by;
-     lower-third captions over the chin are fine), or null while the face is not shown whole (a takeover has shrunk
-     it into a bubble, or the studio shot is on). */
+     lower-third captions over the chin are fine) plus `mouth`, the line under the lips that captions keep 40 px
+     clear of; null while the face is not shown whole (a takeover has shrunk it into a bubble, the studio shot is
+     on, or the end beat has dimmed the picture under the brand marks). */
   function faceBox(n) {
     const t = n / FPS, tk = SNAPCUT.takeover;
-    if (S.inStudio(t) || (tk && tk.at(t))) return null;
+    if (S.inStudio(t) || (tk && tk.at(t)) || BRAND.inEndBeat(t)) return null;
     const f = S.faceScreen(n, t);
-    return { x0: f.x - 0.4 * f.h, x1: f.x + 0.4 * f.h, y0: f.y - 0.5 * f.h, y1: f.y + 0.2 * f.h };
+    return { x0: f.x - 0.4 * f.h, x1: f.x + 0.4 * f.h, y0: f.y - 0.5 * f.h, y1: f.y + 0.2 * f.h, mouth: f.y + 0.32 * f.h };
   }
 
-  return { init, renderFrame, sfxEvents, captionFaceReport, faceBox };
+  return { init, renderFrame, sfxEvents, captionFaceReport, glyphReport, faceBox };
 })();

@@ -6,6 +6,9 @@
 | `plate alignment failed: only N matches` | The image model moved or restyled the room's objects | Regenerate the plate with the object list in the prompt (05-higgsfield.md), or set `room.plate` to null. |
 | Captions sit on the mouth or eyes | The face is low in the frame (a close selfie) | `"captions": {"position": "top"}` in plan.json; `render.py facecheck` confirms. |
 | `camera.face_y` changes nothing | `base_zoom` is 1.0, so the frame cannot move | Raise `base_zoom` to about 1.08 to give the camera room. |
+| `render failed: fonts not usable: Unbounded 700, ...` | No internet: the page loads Unbounded and IBM Plex Mono from Google Fonts | Connect and run it again. Satoshi alone missing means `tools/fetch_fonts.sh` has not run. |
+| `the end beat plays over the last 2.0 s and the last word ends ... too late` | The trim ends right after the last word | Set the trim end the message names (the take must run that long), or `"brand": {"end_beat": false}`. |
+| facecheck flags the first 2 s | The level tag opener (top left) covers the forehead of a face framed high | Move the face down with `camera.face_y` (and `base_zoom` above 1 so the frame can move). |
 | `the source is 1920x1080; snapcut edits 9:16 vertical takes` | A landscape or square take | Crop it to 9:16 first, keeping the face: `ffmpeg -i in.mov -vf "crop=ih*9/16:ih" -c:a copy out.mov` (move the crop's x offset if the face is off centre). |
 | `the source is HDR (HLG or PQ)` | iPhone "HDR Video" is on | Re-shoot with HDR off (Settings, Camera, Record Video), or convert to SDR with a tone-mapping tool you trust before starting. snapcut does not tone-map. |
 | The take was shot at 60 or 24 fps | snapcut edits at 30 fps | The matte and the frames are resampled to 30 fps; the audio keeps its own clock. Tested on 30 fps takes; check the first stills of a 60 fps take closely. |

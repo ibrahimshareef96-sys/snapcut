@@ -64,6 +64,9 @@ PLAN_STUB = {
     "events": {},
     "beats": {},
     "phrases": [],
+    "captions": {"position": "bottom"},
+    "brand": {"tier": "uncommon", "opener": {"topic": ""},
+              "end_beat": {"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"}},
     "camera": {"base_zoom": 1.15, "face_y": 650, "punch": 1.12, "hits": {}},
     "look": {},
 }

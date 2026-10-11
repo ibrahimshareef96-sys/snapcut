@@ -3,15 +3,22 @@
 <head>
 <meta charset="utf-8">
 <title>snapcut compositor</title>
+<!-- Unbounded (level labels, the handle) and IBM Plex Mono (mono labels, the mascot's bubble): the only network
+     request render.py lets this page make (tools/brand.py FONT_CSS must match this href exactly). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap">
 <style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
 </head>
 <body>
+<!-- An offline frame renderer driven by tools/render.py, not a page people watch: prefers-reduced-motion does not
+     apply. Every frame is a pure function of its time. -->
 <canvas id="out" width="1080" height="1920"></canvas>
-<!-- core (do not edit) -->
+<!-- core (do not edit); shareefico.js is the brand's own mark code (symbol, badges, pixel mascot), copied as is -->
+<script src="shareefico.js"></script>
 <script src="engine.js"></script>
 <script src="fx.js"></script>
 <script src="scene.js"></script>
 <script src="captions.js"></script>
+<script src="brand.js"></script>
 <script src="main.js"></script>
 <script src="kit.js"></script>
 <!-- this video's beats: replace with your own files; each registers itself on SNAPCUT -->

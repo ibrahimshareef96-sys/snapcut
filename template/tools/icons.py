@@ -1,7 +1,7 @@
 """The icons a project uses: fetch them once into the per-user cache, then hand them to the compositor.
 
 project.json "icons" maps the name the beat files draw (E.drawIcon(ctx, name, ...)) to one of:
-  {"lucide": "terminal", "fill": "#D7FD64"}   a Lucide icon (ISC licence), stroked in the fill colour
+  {"lucide": "terminal", "fill": "#34D07F"}   a Lucide icon (ISC licence), stroked in the fill colour
   {"brand": "claude"}                          a Simple Icons brand mark in its owner's own colour; never recolour
                                                a brand mark (their trademark rules), and use one only to name a tool
   {"file": "assets/logo.svg", "fill": null}    your own SVG (path relative to the project folder)

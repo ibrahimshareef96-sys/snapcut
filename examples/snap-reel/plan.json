@@ -1,5 +1,7 @@
 {
   "_about": "The plan behind the snap reel (29 Sep 2026): a 73.6 s selfie take cut to 54.9 s. Source seconds throughout.",
+  "_brand": "Added 11 Oct 2026 so the plan builds with the brand package: the snap reel shipped without an end beat, and its trim ends about 0.9 s after the last word, less than the 2 s the end beat needs.",
+  "brand": {"tier": "uncommon", "end_beat": false},
   "trim": [11.05, 67.80],
   "last_word_t": 66.9,
   "cuts": [[18.75, 19.07], [35.45, 35.93], [36.97, 37.30], [41.46, 41.74], [50.83, 51.11], [54.16, 54.37]],

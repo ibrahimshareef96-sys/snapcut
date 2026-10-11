@@ -19,3 +19,6 @@ deliverables/
 *.mp3
 *.webp
 fonts/cache/
+
+# the author's private working notes (never published with the skill)
+/handover.md
