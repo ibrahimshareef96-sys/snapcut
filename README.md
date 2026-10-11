@@ -1,9 +1,10 @@
 # snapcut
 
 An Agent Skill that edits a raw vertical talking-head take into a finished Reel, TikTok or Short: the pauses cut,
-captions that light up the exact spoken word, motion graphics that land on the words they illustrate, a level tag
-opener and a 2-second end beat, the room relit with RGB streamer light, synthesised sound effects, audio mastered to
--14 LUFS. Optional AI shots through Higgsfield: a restyled room, a studio cutaway, explosion plates.
+captions that light up the exact spoken word, motion graphics that land on the words they illustrate, the room
+relit with RGB streamer light, synthesised sound effects, audio mastered to -14 LUFS. Optional AI shots through
+Higgsfield: a restyled room, a studio cutaway, explosion plates. The author's level tag opener and 2-second end beat
+are in the code too, off by default (they draw his marks).
 
 ## The look
 
@@ -11,9 +12,10 @@ snapcut renders in the Shareefico "Ranked" house style (11 Oct 2026): graphite a
 
 - **Captions:** Satoshi Black capitals, at most 15 characters a row, the spoken word in the level colour, a light
   shadow, letters packed tight but never touching (every pair is measured at its shown size).
-- **Level tag opener** for the first 2 s: the level badge, "UNCOMMON · LVL 2" in Unbounded and the topic.
-- **End beat** for the last 2 s: the picture dims, the symbol and a handle (or a keyword call to action) rise, and
-  the pixel mascot pops up with one bubble.
+- **Level tag opener** for the first 2 s (off by default; the author's videos only): the level badge,
+  "UNCOMMON · LVL 2" in Unbounded and the topic.
+- **End beat** for the last 2 s (off by default; the author's videos only): the picture dims, the symbol and a
+  handle (or a keyword call to action) rise, and the pixel mascot pops up with one bubble.
 
 All of it is set in the plan's `"brand"` block: the level (`"tier": "rare"` or `"level": 3`), the opener's topic, the
 end beat's handle and bubble. The symbol, badges and pixel mascot are Ibrahim Shareef's marks, so the opener and the

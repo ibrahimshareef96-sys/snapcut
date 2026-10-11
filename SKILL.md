@@ -110,11 +110,12 @@ A new project gets `{"tier": "uncommon", "opener": false, "end_beat": false}`: c
 opener, no end beat. Ibrahim Shareef's own projects start with `--brand shareefico`, which writes:
 
 ```json
-"brand": {"tier": "uncommon", "opener": {"topic": "AI Maxxing 101"},
+"brand": {"tier": "uncommon", "opener": {"topic": ""},
           "end_beat": {"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"}}
 ```
 
-An end beat always needs its own `cta` and `bubble`: there is no default handle.
+Fill the opener's topic per video (`{"topic": "AI Maxxing 101"}`; empty shows the level alone). An end beat always
+needs its own `cta` and `bubble`: there is no default handle.
 
 - **Level:** `tier` (common, uncommon, rare, epic, legendary) or `level` 1 to 5, default uncommon (LVL 2). Its
   colour lights the spoken caption word and the opener. Pick the level the video teaches: tool tips and prompts are
