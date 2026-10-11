@@ -25,6 +25,19 @@ def test_creates_a_project(tmp_path):
     assert not list(dest.rglob("__pycache__"))
 
 
+def test_a_new_project_carries_no_branding_unless_asked(tmp_path):
+    take = tmp_path / "take.mov"
+    take.write_bytes(b"\x00")
+    assert run(tmp_path / "plain", "--source", take).returncode == 0
+    plain = json.loads((tmp_path / "plain" / "plan.json").read_text())["brand"]
+    assert plain == {"tier": "uncommon", "opener": False, "end_beat": False}
+    assert run(tmp_path / "his", "--source", take, "--brand", "shareefico").returncode == 0
+    his = json.loads((tmp_path / "his" / "plan.json").read_text())["brand"]
+    assert his["opener"] == {"topic": ""}
+    assert his["end_beat"] == {"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"}
+    assert run(tmp_path / "bad", "--source", take, "--brand", "someone").returncode != 0
+
+
 def test_example_files_are_copied_beside_not_over(tmp_path):
     take = tmp_path / "take.mov"
     take.write_bytes(b"\x00")

@@ -9,10 +9,13 @@
 
 Pure functions only: nothing here reads project files, so tests/test_brand.py checks the rules on their own.
 
-plan.json "brand" (every key optional):
+plan.json "brand" (every key optional; the opener and the end beat are OFF unless the plan turns them on, because
+the symbol, badges and pixel mascot are Ibrahim Shareef's marks and must not land on other people's videos):
   {"tier": "uncommon" | "level": 2,
    "opener": {"topic": "Shrink step one"} | false,
-   "end_beat": {"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"} | false}
+   "end_beat": {"cta": "@yourhandle", "bubble": "FOLLOW @YOURHANDLE"} | false}
+An end beat needs its own "cta" and "bubble": there is no default handle. `scripts/new_project.py --brand shareefico`
+writes the Shareefico package (opener on, end beat with @shareefico) for his own videos.
 """
 from __future__ import annotations
 
@@ -27,8 +30,6 @@ END_CLEAR_S = 0.1               # the last word ends at least this long before t
 MAX_TOPIC = 40
 MAX_CTA = 24
 MAX_BUBBLE = 24                 # the pixel mascot's bubble
-HANDLE = "@shareefico"
-BUBBLE = "FOLLOW @SHAREEFICO"
 FONT_CSS = ("https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800"
             "&family=IBM+Plex+Mono:wght@500;600&display=swap")
 FONT_FILES = "https://fonts.gstatic.com/s/"
@@ -117,7 +118,7 @@ def problems(plan: dict) -> list[str]:
         out.append(f"brand.level must be a whole number 1 to 5, not {level!r}")
     elif tier in TIERS and level is not None and TIERS.index(tier) + 1 != level:
         out.append(f"brand.tier {tier} is level {TIERS.index(tier) + 1}, not {level}: give one of them")
-    opener = b.get("opener", {})
+    opener = b.get("opener", False)
     if opener is not False and not isinstance(opener, dict):
         out.append('brand.opener must be {"topic": "..."} or false')
     elif isinstance(opener, dict):
@@ -125,13 +126,15 @@ def problems(plan: dict) -> list[str]:
         topic = opener.get("topic")
         if not (topic is None or (isinstance(topic, str) and not topic.strip())):   # empty or blank: no topic
             _text(topic, "opener.topic", MAX_TOPIC, out, caps=False)                  # shown in sentence case
-    end = b.get("end_beat", {})
+    end = b.get("end_beat", False)
     if end is not False and not isinstance(end, dict):
         out.append('brand.end_beat must be {"cta": "...", "bubble": "..."} or false')
     elif isinstance(end, dict):
         _unknown(end, "end_beat", out)
         for key, limit in (("cta", MAX_CTA), ("bubble", MAX_BUBBLE)):
-            if key in end:
+            if key not in end:      # no default: the handle on the end beat is always the video owner's own
+                out.append(f'brand.end_beat.{key} is required: the end beat has no default handle (or set "end_beat": false)')
+            else:
                 _text(end[key], f"end_beat.{key}", limit, out)
     return out
 
@@ -140,14 +143,14 @@ def settings(plan: dict) -> dict:
     """plan.json "brand" resolved with the defaults (call problems() first). No times: the timeline adds them."""
     b = plan.get("brand") or {}
     tier = b.get("tier") or (TIERS[b["level"] - 1] if b.get("level") else DEFAULT_TIER)
-    opener = b.get("opener", {})
-    end = b.get("end_beat", {})
+    opener = b.get("opener", False)
+    end = b.get("end_beat", False)
     return {
         "tier": tier,
         "level": TIERS.index(tier) + 1,
         "opener": None if opener is False else {"topic": " ".join((opener.get("topic") or "").split())},
-        "end_beat": None if end is False else {"cta": " ".join((end.get("cta") or HANDLE).split()),
-                                               "bubble": " ".join((end.get("bubble") or BUBBLE).split()).upper()},
+        "end_beat": None if end is False else {"cta": " ".join(end["cta"].split()),
+                                               "bubble": " ".join(end["bubble"].split()).upper()},
     }
 
 

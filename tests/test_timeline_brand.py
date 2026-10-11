@@ -23,12 +23,17 @@ def take(tmp_path_factory):
     return src
 
 
+# The opener and the end beat are off unless a plan asks; these tests exercise them, so they ask explicitly.
+SHAREEFICO = {"opener": {"topic": ""}, "end_beat": {"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"}}
+
+
 def project(tmp_path, take, plan_extra):
     dest = tmp_path / "proj"
     subprocess.run([sys.executable, str(REPO / "scripts" / "new_project.py"), str(dest), "--source", str(take)],
                    check=True, capture_output=True)
     plan = {"trim": [0.0, 6.0], "phrases": [{"lines": [["SHRINK STEP ONE", "m"]]},
-                                            {"lines": [["UNTIL IT TAKES *two minutes.*", "l"]]}], **plan_extra}
+                                            {"lines": [["UNTIL IT TAKES *two minutes.*", "l"]]}],
+            "brand": SHAREEFICO, **plan_extra}
     (dest / "plan.json").write_text(json.dumps(plan))
     data = dest / "data"
     data.mkdir()
@@ -43,7 +48,8 @@ def build(dest):
 
 
 def test_rows_carry_their_words_and_the_brand_block(tmp_path, take):
-    dest = project(tmp_path, take, {"brand": {"level": 3, "opener": {"topic": "Build with Me"}}})
+    dest = project(tmp_path, take, {"brand": {"level": 3, "opener": {"topic": "Build with Me"},
+                                              "end_beat": SHAREEFICO["end_beat"]}})
     res = build(dest)
     assert res.returncode == 0, res.stderr
     tl = json.loads((dest / "data" / "timeline.json").read_text())

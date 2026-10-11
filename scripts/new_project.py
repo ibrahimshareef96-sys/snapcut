@@ -2,7 +2,7 @@
 
 Usage:
   python3 scripts/new_project.py PROJECT_DIR --source VIDEO [--work DIR] [--out DIR] [--title TITLE]
-                                 [--example snap-reel]
+                                 [--example snap-reel] [--brand none|shareefico]
 
   PROJECT_DIR   a new (or empty) folder for this video's code and small JSON files
   --source      the vertical 9:16 take (a phone's .MOV or .mp4)
@@ -10,6 +10,9 @@ Usage:
                 Use an external drive if the internal one is tight.
   --out         the deliverables folder: default PROJECT_DIR/deliverables
   --example     also copy a worked example's beat files and plan (as plan.example.json) to learn from
+  --brand       none (default): no level tag opener and no end beat, so nobody else's handle lands on your video.
+                shareefico: Ibrahim Shareef's own package (the opener and the end beat with @shareefico); his marks,
+                for his videos only.
 
 Nothing is copied over existing files: the command refuses a PROJECT_DIR that is not empty.
 """
@@ -33,6 +36,7 @@ def args() -> argparse.Namespace:
     ap.add_argument("--out")
     ap.add_argument("--title", default="Reel")
     ap.add_argument("--example", choices=sorted(p.name for p in EXAMPLES.iterdir() if p.is_dir()))
+    ap.add_argument("--brand", choices=sorted(BRANDS), default="none")
     return ap.parse_args()
 
 
@@ -55,6 +59,14 @@ def project_json(a: argparse.Namespace, dest: Path) -> dict:
     }
 
 
+# plan.json "brand" per --brand. The opener and the end beat carry Ibrahim Shareef's marks, so they are off unless
+# he starts the project as his own.
+BRANDS = {
+    "none": {"tier": "uncommon", "opener": False, "end_beat": False},
+    "shareefico": {"tier": "uncommon", "opener": {"topic": ""},
+                   "end_beat": {"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"}},
+}
+
 PLAN_STUB = {
     "_about": "Write this from the transcript (references/02-plan-the-edit.md). Source seconds throughout.",
     "trim": None,
@@ -65,8 +77,7 @@ PLAN_STUB = {
     "beats": {},
     "phrases": [],
     "captions": {"position": "bottom"},
-    "brand": {"tier": "uncommon", "opener": {"topic": ""},
-              "end_beat": {"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"}},
+    "brand": None,   # filled from BRANDS by --brand
     "camera": {"base_zoom": 1.15, "face_y": 650, "punch": 1.12, "hits": {}},
     "look": {},
 }
@@ -85,7 +96,7 @@ def main() -> None:
     shutil.copytree(SKILL / "template" / "tools", dest / "tools", ignore=ignore)
     shutil.copytree(SKILL / "template" / "compositor", dest / "compositor", ignore=ignore)
     (dest / "project.json").write_text(json.dumps(cfg, indent=2) + "\n")
-    (dest / "plan.json").write_text(json.dumps(PLAN_STUB, indent=2) + "\n")
+    (dest / "plan.json").write_text(json.dumps({**PLAN_STUB, "brand": BRANDS[a.brand]}, indent=2) + "\n")
     # if the project is ever put under git, keep the footage, renders and transcript out of it
     (dest / ".gitignore").write_text("work/\ndata/\ndeliverables/\ntools/visiontool\n__pycache__/\n._*\n")
     if a.example:

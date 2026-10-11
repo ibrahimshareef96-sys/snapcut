@@ -12,13 +12,13 @@ snapcut renders in the Shareefico "Ranked" house style (11 Oct 2026): graphite a
 - **Captions:** Satoshi Black capitals, at most 15 characters a row, the spoken word in the level colour, a light
   shadow, letters packed tight but never touching (every pair is measured at its shown size).
 - **Level tag opener** for the first 2 s: the level badge, "UNCOMMON · LVL 2" in Unbounded and the topic.
-- **End beat** for the last 2 s: the picture dims, the symbol and @shareefico (or a keyword call to action) rise, and
+- **End beat** for the last 2 s: the picture dims, the symbol and a handle (or a keyword call to action) rise, and
   the pixel mascot pops up with one bubble.
 
 All of it is set in the plan's `"brand"` block: the level (`"tier": "rare"` or `"level": 3`), the opener's topic, the
-end beat's handle and bubble, or `false` to leave a part out. The symbol, badges and pixel mascot are Ibrahim
-Shareef's marks: for your own videos, turn both off (`"brand": {"opener": false, "end_beat": false}`); the
-captions keep the look.
+end beat's handle and bubble. The symbol, badges and pixel mascot are Ibrahim Shareef's marks, so the opener and the
+end beat are **off by default**: your videos get the captions and the look with nobody else's handle on them. His
+own projects start with `python3 scripts/new_project.py ... --brand shareefico`.
 
 You give your coding agent a clip. It transcribes it, proposes the cut and the graphics, and renders the video on
 your machine. Your face and voice stay exactly as filmed.

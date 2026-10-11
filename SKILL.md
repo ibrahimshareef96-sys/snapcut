@@ -12,8 +12,9 @@ sound. Every step is a small tool in the project folder, and every creative choi
 writes for the take, so an edit can be changed and re-rendered in minutes.
 
 It ships in the Shareefico house look ("Ranked", 11 Oct 2026): graphite and bone, one level colour per video, Satoshi
-captions, a level tag opener and an end beat with the @shareefico handle and the pixel mascot. Those marks are his:
-for anyone else's videos, turn the opener and the end beat off (see "The house look").
+captions, and for his own videos a level tag opener and an end beat with the @shareefico handle and the pixel mascot.
+Those marks are his, so the opener and the end beat are OFF by default; his projects start with
+`scripts/new_project.py ... --brand shareefico` (see "The house look").
 
 The worked example in `examples/snap-reel/` is the reel this skill was built from (a 73 s take cut to 55 s, with a
 DM bubble, tool tiles, full-screen takeovers, an AI studio shot and a snap explosion). Read its beat files before
@@ -104,25 +105,29 @@ Sizing rules: references/03-captions.md.
 
 ## The house look
 
-plan.json `"brand"` sets the level the video teaches and the package around it (references/02-plan-the-edit.md):
+plan.json `"brand"` sets the level the video teaches and the package around it (references/02-plan-the-edit.md).
+A new project gets `{"tier": "uncommon", "opener": false, "end_beat": false}`: captions in the house look, no
+opener, no end beat. Ibrahim Shareef's own projects start with `--brand shareefico`, which writes:
 
 ```json
 "brand": {"tier": "uncommon", "opener": {"topic": "AI Maxxing 101"},
           "end_beat": {"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"}}
 ```
 
+An end beat always needs its own `cta` and `bubble`: there is no default handle.
+
 - **Level:** `tier` (common, uncommon, rare, epic, legendary) or `level` 1 to 5, default uncommon (LVL 2). Its
   colour lights the spoken caption word and the opener. Pick the level the video teaches: tool tips and prompts are
   uncommon (LVL 2), building your own tools rare (LVL 3), client builds epic (LVL 4).
 - **Level tag opener**, the first 2 s, top left: the badge, "UNCOMMON · LVL 2" and the topic. Keep that corner free
-  of beats for those 2 s. `"opener": false` turns it off.
+  of beats for those 2 s. On only when the plan gives `"opener": {...}`.
 - **End beat**, the last 2 s: the picture dims, the symbol and the handle (or a keyword call to action such as
   `Comment "SKILL"`) rise, and the pixel mascot pops up with one bubble (24 characters at most). The last word must
-  end 0.1 s before it starts; the timeline names the trim end that makes room. `"end_beat": false` turns it off.
+  end 0.1 s before it starts; the timeline names the trim end that makes room. On only when the plan gives
+  `"end_beat": {"cta": ..., "bubble": ...}`.
 - The symbol, badges and pixel mascot come from `compositor/shareefico.js` (Ibrahim Shareef's marks, not MIT; see
-  `compositor/NOTICE-shareefico.txt`). They are for his videos only: for anyone else, set
-  `"brand": {"opener": false, "end_beat": false}`. Unknown keys in `"brand"` are refused, so a typo never falls
-  back to his handle.
+  `compositor/NOTICE-shareefico.txt`). They are for his videos only, which is why both parts are off unless a plan
+  turns them on. Unknown keys in `"brand"` are refused.
 - **Projects started before 11 Oct 2026** need the new compositor and tools: copy `template/compositor/` and
   `template/tools/` over the project's own (keep its `beats.js`), then rebuild the timeline. An old
   `data/timeline.json` stops the render with that instruction.

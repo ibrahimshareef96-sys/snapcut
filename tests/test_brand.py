@@ -102,11 +102,28 @@ def test_an_empty_list_has_no_rows():
 
 # ---------- plan.json "brand" ----------
 
-def test_no_brand_means_the_defaults():
-    s = brand.settings({})
-    assert s == {"tier": "uncommon", "level": 2, "opener": {"topic": ""},
-                 "end_beat": {"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"}}
-    assert brand.problems({}) == []
+def test_no_brand_means_no_opener_and_no_end_beat():
+    # the marks are the author's: a plan that says nothing never puts @shareefico on someone else's video
+    for plan in ({}, {"brand": {}}, {"brand": {"tier": "rare"}}):
+        s = brand.settings(plan)
+        assert (s["opener"], s["end_beat"]) == (None, None)
+        assert brand.problems(plan) == []
+    assert brand.settings({})["tier"] == "uncommon"
+
+
+def test_an_end_beat_has_no_default_handle():
+    probs = brand.problems({"brand": {"end_beat": {}}})
+    assert any("end_beat.cta is required" in p for p in probs)
+    assert any("end_beat.bubble is required" in p for p in probs)
+    assert brand.problems({"brand": {"end_beat": {"cta": "@me"}}}) == [
+        'brand.end_beat.bubble is required: the end beat has no default handle (or set "end_beat": false)']
+    s = brand.settings({"brand": {"end_beat": {"cta": "@me", "bubble": "follow @me"}}})
+    assert s["end_beat"] == {"cta": "@me", "bubble": "FOLLOW @ME"}
+
+
+def test_an_opener_is_on_only_when_the_plan_asks():
+    assert brand.settings({"brand": {"opener": {}}})["opener"] == {"topic": ""}
+    assert brand.settings({"brand": {"opener": {"topic": "AI Maxxing 101"}}})["opener"] == {"topic": "AI Maxxing 101"}
 
 
 def test_level_picks_the_tier_and_switches_turn_parts_off():
