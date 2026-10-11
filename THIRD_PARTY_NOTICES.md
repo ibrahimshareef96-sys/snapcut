@@ -9,8 +9,8 @@ their machine, under its own terms.
 - `template/compositor/shareefico.js` holds the Shareefico symbol, the five level badges, the pixel mascot sprite and
   the Barakah Blueprint Waveform, as the brand's own code draws them. Copyright Ibrahim Shareef, all rights reserved.
   They are included so his videos render in the house look; they are not licensed for other use (see
-  `template/compositor/NOTICE-shareefico.txt`, which travels into every project). For your own videos, turn the
-  opener and the end beat off: plan.json `"brand": {"opener": false, "end_beat": false}`.
+  `template/compositor/NOTICE-shareefico.txt`, which travels into every project). The opener and the end beat are
+  off by default; keep them off for your own videos (plan.json `"brand": {"opener": false, "end_beat": false}`).
 
 ## Fonts
 

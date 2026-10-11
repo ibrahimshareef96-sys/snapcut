@@ -22,8 +22,7 @@ clock, as `transcribe.py` prints it); the tools convert them to output time afte
     {"lines": [["TODAY I'M GOING", "m"], ["TO ANSWER", "l"]]}
   ],
   "captions": {"position": "bottom"},
-  "brand": {"tier": "uncommon", "opener": {"topic": "AI Maxxing 101"},
-            "end_beat": {"cta": "@shareefico", "bubble": "FOLLOW @SHAREEFICO"}},
+  "brand": {"tier": "uncommon", "opener": false, "end_beat": false},
   "camera": {"base_zoom": 1.15, "face_y": 650, "punch": 1.12, "hits": {"like_this": 1.14}},
   "look": {
     "shakes": [{"beat": "snap", "amp": 26, "dur": 1.3}],
@@ -53,7 +52,7 @@ clock, as `transcribe.py` prints it); the tools convert them to output time afte
 | `captions.position` | no | `"bottom"` (default) or `"top"`. `render.py facecheck` tells you which the take needs. At the top, a phrase that starts in the first 2 s sits under the level tag opener. |
 | `brand.tier` / `brand.level` | no | The level the video teaches: `common`, `uncommon`, `rare`, `epic`, `legendary`, or `1` to `5` (give one; they must agree if you give both). Default uncommon (LVL 2). Its colour lights the spoken caption word and the opener. |
 | `brand.opener` | no | The level tag for the first 2 s, top left: `{"topic": "..."}` (at most 40 characters, sentence case; empty shows the level alone) or `false`. Off unless given (the badge is Ibrahim Shareef's mark; `--brand shareefico` turns it on for his projects). |
-| `brand.end_beat` | no | The last 2 s: `{"cta": "@yourhandle", "bubble": "FOLLOW @YOURHANDLE"}` or `false`. `cta` (at most 24 characters) is a handle (starts with @, set in Unbounded) or a keyword call to action (`Comment "SKILL"`, set in Satoshi capitals); `bubble` is the pixel mascot's line, at most 24 characters, in capitals. Both are required: there is no default handle. Off unless given (`--brand shareefico` writes `@shareefico` for his projects); the last word must end 0.1 s before the end beat starts, and the build names the trim end that makes room. |
+| `brand.end_beat` | no | The last 2 s: `{"cta": "@yourhandle", "bubble": "FOLLOW @YOURHANDLE"}` or `false`. `cta` (at most 24 characters) is a handle (starts with @, set in Unbounded) or a keyword call to action (`Comment "SKILL"`, set in Satoshi capitals); `bubble` is the pixel mascot's line, at most 24 characters, in capitals. Both are required: there is no default handle. Off unless given. It draws Ibrahim Shareef's symbol and pixel mascot (his marks, not MIT), so it is for his videos (`--brand shareefico` writes `@shareefico`); for your own, leave it `false` or swap `compositor/shareefico.js` for your own marks; the last word must end 0.1 s before the end beat starts, and the build names the trim end that makes room. |
 | `camera.base_zoom` | no | 1.0 to about 1.2. Above 1 the camera can reframe and follow the face; 1.0 shows the full frame and cannot move. |
 | `camera.face_y` | no | Where the face centre sits on screen (layout pixels, 0 to 1920). Only reachable when zoom leaves room to move. |
 | `camera.punch` | no | The zoom the cuts alternate to (about 1.06 to 1.12). |

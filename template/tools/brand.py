@@ -13,7 +13,7 @@ plan.json "brand" (every key optional; the opener and the end beat are OFF unles
 the symbol, badges and pixel mascot are Ibrahim Shareef's marks and must not land on other people's videos):
   {"tier": "uncommon" | "level": 2,
    "opener": {"topic": "Shrink step one"} | false,
-   "end_beat": {"cta": "@yourhandle", "bubble": "FOLLOW @YOURHANDLE"} | false}
+   "end_beat": {"cta": "@handle", "bubble": "FOLLOW @HANDLE"} | false}
 An end beat needs its own "cta" and "bubble": there is no default handle. `scripts/new_project.py --brand shareefico`
 writes the Shareefico package (opener on, end beat with @shareefico) for his own videos.
 """

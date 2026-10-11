@@ -5,4 +5,5 @@ Copyright (c) 2026 Ibrahim Shareef. All rights reserved. Not covered by the MIT 
 
 They are here so Ibrahim Shareef's own videos render in his house look: the level tag opener (its badge holds his
 symbol) and the end beat (his symbol and his pixel mascot), both drawn by brand.js. They are not licensed for any
-other use. For your own videos, turn both off in plan.json: "brand": {"opener": false, "end_beat": false}.
+other use. Both are off by default; keep them off for your own videos ("brand": {"opener": false, "end_beat":
+false} in plan.json, or leave "brand" out). Only a plan that turns them on draws these marks.

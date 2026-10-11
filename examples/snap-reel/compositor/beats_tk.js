@@ -227,7 +227,7 @@ const TK = (() => {
       const s1 = lerp(0.9, 1, Math.min(L1.s, 1.02));          // no overshoot past the safe zone
       ctx.translate(540, y); ctx.scale(s1, s1);
       E.text(ctx, '1', -400, 14, { font: E.monoFont(34, 500), color: C.lime });
-      E.text(ctx, '@shareefico', -350, 16, { font: E.bodyFont(46, 700) });
+      E.text(ctx, '@shareefico', -350, 16, { font: E.bodyFont(46, 700) });   // the author's reel; use your handle
       ctx.save(); ctx.translate(250, 0); ctx.scale(dip, dip);
       E.fillRR(ctx, -115, -38, 230, 76, 18, pressed ? 'rgba(255,253,244,0.16)' : C.igBlue);
       E.text(ctx, pressed ? 'Following' : 'Follow', pressed ? 12 : 0, 13, { font: E.bodyFont(36, 700), align: 'center' });
